@@ -107,7 +107,7 @@
     - Main star and compare star keep fixed radius in pixels.
     - **Background HR grid** expands/contracts procedurally to emulate star growth/shrinkage.
     - User perceives scale through **changing density of the grid**.
-    - **Scale badge** indicates real size: $[1~\text{px} \;\equiv\; X \, R_\odot\]$.
+    - **Scale badge** indicates real size: $1 \text{px} \equiv X \cdot R_\odot$.
 
 ---
 
@@ -117,13 +117,13 @@
 - **S1 Adjusting:** Slider changes cause background grid to move.
 - **S2 Snap:** Nearest catalog star pulses for 2 seconds.
 - **S3 Compare:** Secondary star hidden.
-- **S4 Overlay:** HR diagram visible; markers move with parameters.
+- **S4 Overlay:** HR diagram visible, markers move with parameters.
 
 ### 6.2 Event -> Effect
 | Event | Effect |
 |------|------|
-| `input.change(temp/lum/mass/stage)` | Stars fixed size; background grid expands/contracts; telemetry updates. |
-| `click.snap` | Nearest star selected; hollow marker highlighted. |
+| `input.change(temp/lum/mass/stage)` | Stars fixed size, background grid expands/contracts, telemetry updates. |
+| `click.snap` | Nearest star selected, hollow marker highlighted. |
 | `toggle.compare` | Show/hide compare star + info tag. |
 
 ---
@@ -132,12 +132,14 @@
 - **Axes:** Temperature(K, log, decreasing →), Luminosity(L☉, log, increasing ↑).
 - **Spectral bands:** O-M.
 - **Markers:** Current star (solid), nearest star (hollow, labeled).
-- **Scale visualization:** Marker radius **constant**; axis grid spacing changes with parameters.
+- **Scale visualization:** Marker radius **constant**, axis grid spacing changes with parameters.
 
 ---
 
 ## 8. Accessibility
-- Fonts >= 14px, contrast AA, sliders keyboard focusable.
+- Fonts >= 14px
+- Contrast AA
+- Sliders keyboard focusable.
 
 ---
 
