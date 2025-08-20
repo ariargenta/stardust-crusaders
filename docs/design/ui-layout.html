@@ -1,98 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Star Visualizer Wireframe</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Stardust Crusadiers — UI Layout Prototype</title>
     <style>
-        body {
+        :root {
+            --panel-w: 28vw; /* ~2/8 width */
+            --bg: #ffffff;
+            --ink: #111;
+            --muted: #888;
+            --accent: #0a84ff;
+            --ring: rgba(0,0,0,0.08);
+            --metric-scale: 1; /* background grid scale (computed) */
+            --main-star-rpx: 260; /* fixed on-screen radius (px) */
+            --comp-star-rpx: 120; /* fixed on-screen radius (px) */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
             margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            background: var(--bg);
+            color: var(--ink);
+            font: 14px/1.3 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         }
 
-        .header {
-            width: 100%;
-            height: 25px;
-            background: #ccc;
-            display: flex;
-            align-items: center;
-            padding-left: 20px;
+        .app {
+            display: grid;
+            grid-template-columns: 1fr var(--panel-w);
+            grid-template-rows: 100vh;
+            overflow: hidden;
         }
 
-        .container {
-            display: flex;
-            width: 100%;
-            height: 100vh;
-        }
-
-        .main {
-            flex: 1;
+        /* LEFT: STAR FIELD */
+        .starfield {
             position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .main .star {
-            width: 300px;
-            height: 300px;
-            border: 2px solid #333;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 16px;
-        }
-
-        .secondary-star {
-            position: absolute;
-            top: 15%;
-            left: 25%;
-            width: 80px;
-            height: 80px;
-            border: 2px solid #666;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 10px;
-        }
-
-        .secondary-info {
-            position: absolute;
-            top: 15%;
-            left: 32%;
-            width: 120px;
-            height: 40px;
-            border: 2px solid #999;
+            overflow: hidden;
             background: #fff;
-            display: flex;
-            justify-content: center;
+        }
+
+        /* Procedural “metric” — expanding concentric rings (SVG scaled by CSS var) */
+        .metric {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+            .metric svg {
+                width: 200vmax;
+                height: 200vmax; /* oversize so rings fill view */
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) scale(var(--metric-scale));
+                transform-origin: center;
+            }
+
+        /* Star sprites (fixed-size circles) */
+        .star {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.15) inset;
+            display: grid;
+            place-items: center;
+            color: #000;
+            font-weight: 600;
+            user-select: none;
+        }
+
+            .star.main {
+                width: calc(var(--main-star-rpx)*2px);
+                height: calc(var(--main-star-rpx)*2px);
+                left: 50%;
+                top: 55%;
+                transform: translate(-50%,-50%);
+                background: #0d37ff; /* blue */
+                color: rgba(255,255,255,0.9);
+            }
+
+            .star.comp {
+                width: calc(var(--comp-star-rpx)*2px);
+                height: calc(var(--comp-star-rpx)*2px);
+                left: 12%;
+                top: 18%;
+                transform: translate(-50%,-50%);
+                background: #ff2b2b; /* red */
+                color: rgba(255,255,255,0.95);
+            }
+
+        .tag {
+            position: absolute;
+            left: 12%;
+            top: 30%;
+            transform: translate(-50%,0);
+            padding: 8px 14px;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .badge {
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* RIGHT: PANEL */
+        .panel {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            border-left: 1px solid #eee;
+            background: #fafafa;
+        }
+
+            .panel .group {
+                padding: 16px 18px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .panel h3 {
+                margin: 0 0 8px 0;
+                font-size: 13px;
+                letter-spacing: .02em;
+                color: #444;
+                text-transform: uppercase;
+            }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
             align-items: center;
+            margin: 8px 0;
+        }
+
+            .row label {
+                color: #333;
+                font-size: 14px;
+            }
+
+        select, input[type=range] {
+            width: 100%;
+        }
+
+        input[type=range] {
+            cursor: ew-resize;
+        }
+
+        .kv {
+            color: #222;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .muted {
+            color: var(--muted);
             font-size: 12px;
         }
 
-        .control-panel {
-            width: 500px;
-            background: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            font-size: 14px;
+        /* HR mini-plot */
+        .hr {
+            height: 34vh;
+            padding: 12px 16px;
         }
-        </style>
-    </head>
-    <body>
-        <div class="header">Header / Navigation</div>
-        <div class="container">
-            <div class="main">
-            <div class="star">Main Star</div>
-            <div class="secondary-star">Secondary</div>
-            <div class="secondary-info">Info</div>
+
+            .hr canvas {
+                width: 100%;
+                height: 100%;
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 8px;
+            }
+
+        /* Tiny helpers */
+        .sublabel {
+            font-size: 12px;
+            color: #555;
+        }
+
+        .btnrow {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            border: 1px solid #ddd;
+            background: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+            .btn:hover {
+                background: #f3f3f3;
+            }
+    </style>
+</head>
+<body>
+    <div class="app">
+
+        <!-- LEFT: STAR FIELD -->
+        <div class="starfield" id="starfield">
+            <!-- Procedural “metric” (concentric rings) -->
+            <div class="metric">
+                <svg viewBox="-1000 -1000 2000 2000" aria-hidden="true">
+                    <!-- rings every 50 units; visual only -->
+                    <defs>
+                        <radialGradient id="fade" r="1">
+                            <stop offset="90%" stop-color="rgba(0,0,0,0)" />
+                            <stop offset="100%" stop-color="rgba(0,0,0,0)" />
+                        </radialGradient>
+                    </defs>
+                    <g id="rings" stroke="var(--ring)" fill="none">
+                        <!-- draw many circles -->
+                        <script type="application/ecmascript">                            <![CDATA[
+                                        const NS="http://www.w3.org/2000/svg";
+                                        const g=document.currentScript.parentNode;
+                                        for(let r=50; r<=1000; r+=50){
+                                          const c=document.createElementNS(NS,'circle');
+                                          c.setAttribute('cx','0'); c.setAttribute('cy','0'); c.setAttribute('r',String(r));
+                                          g.appendChild(c);
+                                        }
+                                      ]]></script>
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Stars (fixed-size) -->
+            <div class="star main" id="mainStar">Simulated</div>
+            <div class="star comp" id="compStar">Compare</div>
+            <div class="tag" id="compTag">Nearest: <span id="nearestName">—</span></div>
+
+            <!-- Scale badge -->
+            <div class="badge" id="scaleBadge">1 px ≡ — R☉</div>
         </div>
-        <div class="control-panel">Control Panel</div>
-    </body>
+
+        <!-- RIGHT: PANEL -->
+        <aside class="panel">
+            <div class="group">
+                <h3>Evolutionary Stage</h3>
+                <div class="row">
+                    <label for="stage">Stage</label>
+                    <select id="stage">
+                        <option>Main Sequence</option>
+                        <option>Giant</option>
+                        <option>Supergiant</option>
+                        <option>White Dwarf</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="group">
+                <h3>Parameters</h3>
+                <div class="row">
+                    <label for="temp">Temperature (K)</label>
+                    <input id="temp" type="range" min="2500" max="40000" step="50" value="5777" />
+                </div>
+                <div class="row">
+                    <label for="lum">Luminosity (L☉) <span class="sublabel muted">(log)</span></label>
+                    <!-- use 0..100 slider and map to 1e-4..1e6 in JS -->
+                    <input id="lum" type="range" min="0" max="100" step="1" value="50" />
+                </div>
+
+                <div class="row"><label>Mass (M☉)</label><div class="kv" id="massKV">—</div></div>
+                <div class="row"><label>Radius (R☉)</label><div class="kv" id="radiusKV">—</div></div>
+                <div class="row"><label>Class</label><div class="kv" id="classKV">—</div></div>
+
+                <div class="btnrow">
+                    <button class="btn" id="resetBtn">Reset</button>
+                    <button class="btn" id="snapBtn">Snap to Nearest</button>
+                </div>
+            </div>
+
+            <div class="group hr">
+                <h3 style="margin:0 0 6px 0;">HR Diagram</h3>
+                <canvas id="hrCanvas" width="600" height="360"></canvas>
+                <div class="muted" style="margin-top:6px;">Axes: Temp → (decreasing), Lum ↑ (log)</div>
+            </div>
+        </aside>
+    </div>
+
+    <script>/* ---------- Constants & helpers ---------- */
+const T_SUN = 5777;               // K
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+
+/* Map slider 0..100 to log range [1e-4, 1e6] */
+function sliderToLum(v01){
+  const logMin = Math.log10(1e-4), logMax = Math.log10(1e6);
+  const x = lerp(logMin, logMax, v01);
+  return Math.pow(10, x);
+}
+
+/* Spectral class by temperature (rough, educational) */
+function spectralClass(T){
+  if (T>=30000) return "O";
+  if (T>=10000) return "B";
+  if (T>= 7500) return "A";
+  if (T>= 6000) return "F";
+  if (T>= 5200) return "G";
+  if (T>= 3700) return "K";
+  return "M";
+}
+
+/* Radius from L,T in solar units */
+function radiusRsun(L, T){
+  return Math.sqrt(L) * Math.pow(T_SUN / T, 2);
+}
+
+/* MS mass estimate (L≈M^3.5) */
+function massMsun(L, alpha=3.5){
+  return Math.pow(L, 1/alpha);
+}
+
+/* HR normalized position (u rightwards cool, v upwards bright) */
+function hrUV(T, L) {
+  const Tmin=2500, Tmax=40000, Lmin=1e-4, Lmax=1e6;
+  const u = (Math.log10(Tmax)-Math.log10(T)) / (Math.log10(Tmax)-Math.log10(Tmin));
+  const v = (Math.log10(L)-Math.log10(Lmin)) / (Math.log10(Lmax)-Math.log10(Lmin));
+  return {u: clamp(u,0,1), v: clamp(v,0,1)};
+}
+
+/* ---------- DOM ---------- */
+const tempEl = document.getElementById('temp');
+const lumEl  = document.getElementById('lum');
+const stageEl= document.getElementById('stage');
+
+const massKV = document.getElementById('massKV');
+const radiusKV = document.getElementById('radiusKV');
+const classKV = document.getElementById('classKV');
+const scaleBadge = document.getElementById('scaleBadge');
+
+const starfield = document.getElementById('starfield');
+const hrCanvas = document.getElementById('hrCanvas');
+const ctx = hrCanvas.getContext('2d');
+
+/* ---------- Render HR mini-plot ---------- */
+function drawHR(T, L) {
+  const w=hrCanvas.width, h=hrCanvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  // grid
+  ctx.strokeStyle="#eee"; ctx.lineWidth=1;
+  for (let i=1;i<4;i++){ // vertical
+    const x = i*w/4; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+  }
+  for (let i=1;i<4;i++){ // horizontal
+    const y = i*h/4; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+  }
+
+  // axes labels (minimal)
+  ctx.fillStyle="#666"; ctx.font="12px system-ui";
+  ctx.fillText("Temp → (cooler)", w-120, h-8);
+  ctx.save(); ctx.translate(10,16); ctx.rotate(-Math.PI/2); ctx.fillText("Lum ↑", 0,0); ctx.restore();
+
+  // position
+  const {u,v} = hrUV(T,L);
+  const x = u*w;
+  const y = (1-v)*h;
+  ctx.fillStyle="#111";
+  ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fill();
+}
+
+/* ---------- Update everything ---------- */
+function update() {
+  const T = parseFloat(tempEl.value);
+  const L = sliderToLum((parseFloat(lumEl.value))/100);
+
+  const R = radiusRsun(L, T); // in R_sun
+  const M = massMsun(L);
+
+  // Update telemetry
+  massKV.textContent = M.toFixed(2);
+  radiusKV.textContent = R.toFixed(2);
+  classKV.textContent = spectralClass(T);
+
+  // Scale badge (1 px ≡ X R_sun), with X = R / r_px
+  const rpx = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--main-star-rpx')) || 260;
+  const X = R / rpx;
+  scaleBadge.textContent = `1 px ≡ ${X.toPrecision(3)} R☉`;
+
+  // Procedural metric scaling: proportional to R (normalized)
+  // Clamp so rings don't disappear or get too dense
+  const metricScale = 0.6 + Math.min(3.0, Math.max(0.3, R/5));
+  document.documentElement.style.setProperty('--metric-scale', metricScale.toString());
+
+  // HR mini-plot
+  drawHR(T, L);
+}
+
+/* ---------- Wire events ---------- */
+[tempEl, lumEl, stageEl].forEach(el => el.addEventListener('input', update));
+document.getElementById('resetBtn').addEventListener('click', () => {
+  tempEl.value = 5777;
+  lumEl.value = 50; // ≈ 1 Lsun mid
+  stageEl.value = "Main Sequence";
+  update();
+});
+document.getElementById('snapBtn').addEventListener('click', () => {
+  // Placeholder: you can wire your real catalog matcher here
+  document.getElementById('nearestName').textContent = "Sirius A (demo)";
+});
+
+update(); // first paint</script>
+</body>
 </html>
