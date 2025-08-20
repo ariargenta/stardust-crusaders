@@ -53,7 +53,7 @@
     StarField --- Panel
 ```
 
-![image](ui-layout.jpg)
+![main screen layout](./ui-layout.jpg)
 
 ---
 
