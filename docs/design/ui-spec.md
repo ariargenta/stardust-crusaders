@@ -53,6 +53,8 @@
     StarField --- Panel
 ```
 
+![image](ui-layout.jpg)
+
 ---
 
 ## 3. Component registry
