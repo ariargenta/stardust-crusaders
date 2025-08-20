@@ -57,7 +57,14 @@
 
 ---
 
-## 3. Component registry
+## 3. Director's notes
+- The **simulated start** and **comparison star** remain visually constant in size to preserve recognition.
+- The **background grid** performs the scaling, conveying expansion of space rather than physical growth of objects.
+- The **camera** is declarative modeled as a transformation of the coordinate system, not the sprites.
+
+---
+
+## 4. Component registry
 | ID | Role | Type | Input/Output | Data binding | Notes |
 |------|------|------|------|------|------|
 | `ctrl.temp` | Temperature | slider | input: `K` | `AppState.params.temperatureK` | Range 2.5k–40k |
@@ -71,7 +78,7 @@
 
 ---
 
-## 4. Controls - Ranges, Steps, Defaults
+## 5. Controls - Ranges, Steps, Defaults
 - **Temperature (`ctrl.temp`)**
     - Unit: Kelvin (K)
     - Range: 2500 -> 40000
@@ -92,8 +99,8 @@
 
 ---
 
-## 5. Visual mapping and rendering frame rule
-### 5.1 Color ramp
+## 6. Visual mapping and rendering frame rule
+### 6.1 Color ramp
 - cel-shaded bins by temperature:
     - `< 3300 K` = Red
     - `3300 - 5000` = Orange
@@ -103,7 +110,7 @@
 
 ---
 
-### 5.2 Scale and camera movement
+### 6.2 Scale and camera movement
 - **Principle:** Stars remain **constant anchors**; background conveys scale.
 - **Implementation:**
     - Main star and compare star keep fixed radius in pixels.
@@ -113,15 +120,15 @@
 
 ---
 
-## 6. States and behaviours
-### 6.1 States
+## 7. States and behaviours
+### 7.1 States
 - **S0 Initial:** Deaults (Sun), comparison shown.
 - **S1 Adjusting:** Slider changes cause background grid to move.
 - **S2 Snap:** Nearest catalog star pulses for 2 seconds.
 - **S3 Compare:** Secondary star hidden.
 - **S4 Overlay:** HR diagram visible, markers move with parameters.
 
-### 6.2 Event -> Effect
+### 7.2 Event -> Effect
 | Event | Effect |
 |------|------|
 | `input.change(temp/lum/mass/stage)` | Stars fixed size, background grid expands/contracts, telemetry updates. |
@@ -130,7 +137,7 @@
 
 ---
 
-## 7. HR diagram
+## 8. HR diagram
 - **Axes:** Temperature(K, log, decreasing →), Luminosity(L☉, log, increasing ↑).
 - **Spectral bands:** O-M.
 - **Markers:** Current star (solid), nearest star (hollow, labeled).
@@ -138,14 +145,14 @@
 
 ---
 
-## 8. Accessibility
+## 9. Accessibility
 - Fonts >= 14px
 - Contrast AA
 - Sliders keyboard focusable.
 
 ---
 
-## 9. Acceptance criteria
+## 10. Acceptance criteria
 - [ ] Star circles remain fixed size, only background grid expands/contracts.
 - [ ] Scale badge updates correctly.
 - [ ] HR diagram shows accurate placement with markers.

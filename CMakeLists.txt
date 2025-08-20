@@ -9,4 +9,4 @@ project(stardust-crusadiers
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(stardust-crusadiers src/main.cpp)
+add_executable(stardust-crusadiers src/main.cpp "src/main.c")
