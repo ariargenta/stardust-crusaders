@@ -1,5 +1,5 @@
 ﻿# ADR 0001: Adopt Cel shading as the rendering strategy
-Date: 2025-08-19
+Date: `2025-08-19`
 Status: Accepted
 
 ## Context
