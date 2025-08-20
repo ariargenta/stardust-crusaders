@@ -1,0 +1,200 @@
+:root {
+    --panel-w: 28vw; /* ~2/8 width */
+    --bg: #ffffff;
+    --ink: #111;
+    --muted: #888;
+    --accent: #0a84ff;
+    --ring: #FF00FF;
+    --metric-scale: 1; /* background grid scale (computed) */
+    --main-star-rpx: 260; /* fixed on-screen radius (px) */
+    --comp-star-rpx: 120; /* fixed on-screen radius (px) */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.3 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.app {
+    display: grid;
+    grid-template-columns: 1fr var(--panel-w);
+    grid-template-rows: 100vh;
+    overflow: hidden;
+}
+
+/* LEFT: STAR FIELD */
+.starfield {
+    position: relative;
+    overflow: hidden;
+    background: #000000;
+}
+
+/* Procedural “metric” — expanding concentric rings (SVG scaled by CSS var) */
+.metric {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.metric svg {
+    width: 200vmax;
+    height: 200vmax; /* oversize so rings fill view */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(var(--metric-scale));
+    transform-origin: center;
+}
+
+/* Star sprites (fixed-size circles) */
+.star {
+    position: absolute;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.15) inset;
+    display: grid;
+    place-items: center;
+    color: #000;
+    font-weight: 600;
+    user-select: none;
+}
+
+.star.main {
+    width: calc(var(--main-star-rpx)*2px);
+    height: calc(var(--main-star-rpx)*2px);
+    left: 50%;
+    top: 55%;
+    transform: translate(-50%,-50%);
+    background: #0000FF;
+    color: rgba(255,255,255,0.9);
+}
+
+.star.comp {
+    width: calc(var(--comp-star-rpx)*2px);
+    height: calc(var(--comp-star-rpx)*2px);
+    left: 12%;
+    top: 18%;
+    transform: translate(-50%,-50%);
+    background: #FF0000;
+    color: rgba(255,255,255,0.95);
+}
+
+.tag {
+    position: absolute;
+    left: 12%;
+    top: 30%;
+    transform: translate(-50%,0);
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #333;
+}
+
+.badge {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+/* RIGHT: PANEL */
+.panel {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    border-left: 1px solid;
+    background: #000000;
+}
+
+.panel .group {
+    padding: 16px 18px;
+    border-bottom: 1px solid #eee;
+}
+
+.panel h3 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    letter-spacing: .02em;
+    color: #FFFFFF;
+    text-transform: uppercase;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.row label {
+    color: #FFFFFF;
+    font-size: 14px;
+}
+
+select, input[type=range] {
+    width: 100%;
+}
+
+input[type=range] {
+    cursor: ew-resize;
+}
+
+.kv {
+    color: #222;
+    font-variant-numeric: tabular-nums;
+}
+
+.muted {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* HR mini-plot */
+.hr {
+    height: 34vh;
+    padding: 12px 16px;
+}
+
+.hr canvas {
+    width: 100%;
+    height: 100%;
+    background: #FFFFFF;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+/* Tiny helpers */
+.sublabel {
+    font-size: 12px;
+    color: #FFFFFF;
+}
+
+.btnrow {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn {
+    border: 1px solid #00FF00;
+    background: #00FF00;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #f3f3f3;
+}
