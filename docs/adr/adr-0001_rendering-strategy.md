@@ -1,6 +1,6 @@
 ﻿# ADR 0001: Adopt Cel shading as the rendering strategy
 Date: `2025-08-19`
-Status: Accepted
+Status: `Accepted`
 
 ## Context
 The **vision and scope** establishes that this project investigates the use of **cel shading** as an educational support tool for visualizing the Hertzsprung-Russell diagram.
