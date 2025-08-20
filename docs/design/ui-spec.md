@@ -107,7 +107,7 @@
     - Main star and compare star keep fixed radius in pixels.
     - **Background HR grid** expands/contracts procedurally to emulate star growth/shrinkage.
     - User perceives scale through **changing density of the grid**.
-    - **Scale badge** indicates real size: \[1~\text{px} \;\equiv\; X \, R_\odot\]
+    - **Scale badge** indicates real size: $[1~\text{px} \;\equiv\; X \, R_\odot\]$.
 
 ---
 
@@ -128,3 +128,22 @@
 
 ---
 
+## 7. HR diagram
+- **Axes:** Temperature(K, log, decreasing →), Luminosity(L☉, log, increasing ↑).
+- **Spectral bands:** O-M.
+- **Markers:** Current star (solid), nearest star (hollow, labeled).
+- **Scale visualization:** Marker radius **constant**; axis grid spacing changes with parameters.
+
+---
+
+## 8. Accessibility
+- Fonts >= 14px, contrast AA, sliders keyboard focusable.
+
+---
+
+## 9. Acceptance criteria
+- [ ] Star circles remain fixed size, only background grid expands/contracts.
+- [ ] Scale badge updates correctly.
+- [ ] HR diagram shows accurate placement with markers.
+- [ ] Telemetry panel shows T, L, R, M, stage.
+- [ ] Controls respond smoothly with no desync.
