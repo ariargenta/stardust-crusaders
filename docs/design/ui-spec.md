@@ -107,4 +107,24 @@
     - Main star and compare star keep fixed radius in pixels.
     - **Background HR grid** expands/contracts procedurally to emulate star growth/shrinkage.
     - User perceives scale through **changing density of the grid**.
-    - **Scale badge** indicates real size: `\[1~\text{px} \;\equiv\; X \, R_\odot\]`
+    - **Scale badge** indicates real size: \[1~\text{px} \;\equiv\; X \, R_\odot\]
+
+---
+
+## 6. States and behaviours
+### 6.1 States
+- **S0 Initial:** Deaults (Sun), comparison shown.
+- **S1 Adjusting:** Slider changes cause background grid to move.
+- **S2 Snap:** Nearest catalog star pulses for 2 seconds.
+- **S3 Compare:** Secondary star hidden.
+- **S4 Overlay:** HR diagram visible; markers move with parameters.
+
+### 6.2 Event -> Effect
+| Event | Effect |
+|------|------|
+| `input.change(temp/lum/mass/stage)` | Stars fixed size; background grid expands/contracts; telemetry updates. |
+| `click.snap` | Nearest star selected; hollow marker highlighted. |
+| `toggle.compare` | Show/hide compare star + info tag. |
+
+---
+
