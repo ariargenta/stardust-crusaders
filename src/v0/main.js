@@ -51,13 +51,37 @@ function initTextureBuffer(gl) {
 
         textureCoordinates.push(abscissa, ordinate);
     }
-    
+
     const textureCoordBuffer = gl.createBuffer();
 
     gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
 
     return textureCoordBuffer;
+}
+
+function initShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
+    const shaderProgram = gl.createProgram();
+    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert(
+            `Unable to initialise shader program: ${gl.getProgramInfoLog(shaderProgram)}`,
+        );
+
+        return null;
+    }
+    
+    return shaderProgram;
+}
+
+function loadShader() {
+    
 }
 
 function main() {
@@ -73,13 +97,15 @@ function main() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const vertexShader = `
+    const vertexShaderSource = `
         
     `;
 
-    const fragmentShader = `
+    const fragmentShaderSource = `
         
     `;
+
+    const shaderProgram = initShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
 
     const programInfo = {
         program: shaderProgram,
