@@ -99,6 +99,10 @@ function loadShader(gl, type, source) {
 
 function initTexture(gl) {
     const texture = gl.createTexture();
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    
+    const level = 0;
     const internalFormat = gl.RGBA;
     const width = 1;
     const height = 1;
@@ -107,9 +111,7 @@ function initTexture(gl) {
     const srcType = gl.UNSIGNED_BYTE;
     const pixel = new Uint8Array([0, 0, 255, 255]);
 
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-
-    gl.texImage(
+    gl.texImage2D(
         gl.TEXTURE_2D
         , level
         , internalFormat
@@ -142,11 +144,20 @@ function main() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     const vertexShaderSource = `
-        
+        attribute vec2 aPos;
+
+        void main() {
+            gl_Position = vec4(aPos, 0.0, 1.0);
+        }
     `;
 
     const fragmentShaderSource = `
-        
+        precision mediump float;
+        uniform vec4 uColor;
+
+        void main() {
+            gl_FragColor = uColor;
+        }
     `;
 
     const shaderProgram = initShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
