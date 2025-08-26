@@ -2,6 +2,42 @@ let cubeRotation = 0.0;
 let deltaTime = 0;
 let copyVideo = false;
 
+const vertexShaderSource = `
+    attribute vec4 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec2 aTextureCoord;
+    uniform mat4 uNormalMatrix;
+    uniform mat4 uModelViewMatrix;
+    uniform mat4 uProjectionMatrix;
+
+    varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
+
+    void main(void) {
+        gl_Position = uProjectionMatrix*uModelViewMatrix*aVertexPosition;
+        vTextureCoord = aTextureCoord;
+        highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+        highp vec3 directionalLightColor = vec3(1, 1, 1);
+        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+        highp vec4 transformedNormal = uNormalMatrix*vec4(aVertexNormal, 1.0);
+
+        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+        vLighting = ambientLight + (directionalLightColor*directional);
+        }
+    `;
+
+const fragmentShaderSource = `
+    varying highp vec2 vTextureCoord;
+    varying highp vec3 vLighting;
+
+    uniform sampler2D uSampler;
+
+    void main(void) {
+        highp vec4 textelColor = texture2D(uSampler, vTextureCoord);
+        gl_FragColor = vec4(textelColor.rgb*vLighting, textelColor.a);
+    }
+`;
+
 main();
 
 function main() {
@@ -17,47 +53,7 @@ function main() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const vsSource = `
-        attribute vec4 aVertexPosition;
-        attribute vec3 aVertexNormal;
-        attribute vec2 aTextureCoord;
-        uniform mat4 uNormalMatrix;
-        uniform mat4 uModelViewMatrix;
-        uniform mat4 uProjectionMatrix;
-
-        varying highp vec2 vTextureCoord;
-        varying highp vec3 vLighting;
-        
-        void main(void) {
-            gl_Position = uProjectionMatrix*uModelViewMatrix*aVertexPosition;
-            vTextureCoord = aTextureCoord;
-            highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
-            highp vec3 directionalLightColor = vec3(1, 1, 1);
-            highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-            highp vec4 transformedNormal = uNormalMatrix*vec4(aVertexNormal, 1.0);
-
-            highp float directional = max(
-                dot(transformedNormal.xyz, directionalVector),
-                0.0
-            );
-
-            vLighting = ambientLight + (directionalLightColor*directional);
-        }
-    `;
-
-    const fsSource = `
-        varying highp vec2 vTextureCoord;
-        varying highp vec3 vLighting;
-
-        uniform sampler2D uSampler;
-
-        void main(void) {
-            highp vec4 textelColor = texture2D(uSampler, vTextureCoord);
-            gl_FragColor = vec4(textelColor.rgb*vLighting, textelColor.a);
-        }
-    `;
-
-    const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+    const shaderProgram = initShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
 
     const programInfo = {
         program: shaderProgram,
@@ -101,9 +97,9 @@ function main() {
     requestAnimationFrame(render);
 }
 
-function initShaderProgram(gl, vsSource, fsSource) {
-    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+function initShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
+    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     const shaderProgram = gl.createProgram();
 
     gl.attachShader(shaderProgram, vertexShader);
@@ -528,3 +524,29 @@ function setNormalAttribute(gl, buffers, programInfo) {
 
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 }
+
+function generateSphereVertexArray() {
+    const vertexPositions = [];
+    const radius = 640;
+    const steps = 64;
+
+    for(let i = 0; i <= steps; ++i) {
+        const phi = Math.PI * i / steps;
+
+        for(let j = 0; j <= steps; ++j) {
+            const theta = 2 * Math.PI * i / steps;
+
+            const abscissa = radius * Math.sin(phi) * Math.cos(theta);
+            const ordinate = radius * Math.sin(phi) * Math.sin(theta);
+            const applicate = radius * Math.cos(phi);
+
+            vertexPositions.push(abscissa, ordinate, applicate);
+        }
+    }
+
+    console.log(vertexPositions);
+
+    return vertexPositions;
+}
+
+generateSphereVertexArray();
