@@ -527,9 +527,11 @@ function setNormalAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 }
 
-function generateGeometry() {
+function generateSphereVAOs() {
     const vertexPositions = generateSphereVertexArray()
     const indexArray = generateSphereIndexArray();
+    const vertexNormals = generateSphereVertexNormals(vertexPositions);
+    const faceColours = generateSphereFaceColours(vertexPositions);
 }
 
 function generateSphereVertexArray() {
@@ -557,7 +559,6 @@ function generateSphereVertexArray() {
 
 function generateSphereIndexArray() {
     const indexArray = [];
-
     const northPoleIndex = 0;
     const southPoleIndex = 1 + (steps - 1) * steps;
 
@@ -617,7 +618,7 @@ function generateSphereIndexArray() {
     return indexArray;
 }
 
-function generateVertexNormals(vertexPositions) {
+function generateSphereVertexNormals(vertexPositions) {
     const vertexNormals = [];
     const vertexCount = vertexPositions.length / 3;
 
@@ -649,4 +650,52 @@ function generateVertexNormals(vertexPositions) {
     }
 
     return vertexNormals;
+}
+
+/**
+ * Generate per-vertex RGBA colours using latitude/longitude banding on a sphere.
+ * - Expects vertex positions of a sphere centered at the origin.
+ * - Colours are assigned per-vertex.
+ * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0, y0, z0, x1, y1, z1, ... , x_n, y_n, z_n]
+ * @param {Object} [options]
+ * @param {number} [options.latitudeBandCount = 8] - Number of latitude bands (φ direction).
+ * @param {number} [options.longitudeBandCount = 16] - Number of longitude bands (θ direction).
+ * @param {boolean} [options.useChecker = false] - If true, toogles a checkerboard accent.
+ * @param {number} [options.alpha = 1.0] - Alpha channel (0... 1).
+ * @returns {Float32Array} faceColours - Flat RGBA array per vertex.
+ */
+function generateSphereFaceColours(vertexPositions) {
+    const faceColours = [];
+    const {latitudeBandCount = 8, longitudeBandCount = 16, useChecker = true, alpha = 1.0} = options;
+    const vertexCount = Math.floor(vertexPositions.length / 3);
+
+    for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+        const abscissa = vertexPositions[3 * vertexIndex + 0];
+        const ordinate = vertexPositions[3 * vertexIndex + 1];
+        const applicate = vertexPositions[3 * vertexIndex + 2];
+        const length = Math.hypot(abscissa, ordinate, applicate) || 1.0;
+        const normalU = abscissa / length;
+        const normalV = ordinate / length;
+        const normalW = applicate / length;
+        const phi = Math.acos(Math.min(1, Math.max(-1, normalW)));
+        let theta = Math.atan2(normalV, normalU);
+
+        if(theta < 0) {
+            theta += 2 * Math.PI;
+        }
+
+        const latitude = theta / (2 * Math.PI);
+        const longitude = phi / Math.PI;
+        const longitudeBandIndex = Math.floor(latitude * longitudeBandCount);
+        const latitudeBandIndex = Math.floor(longitude * latitudeBandCount);
+        const redChannel = (longitudeBandIndex + 0.5) / longitudeBandCount;
+        const greenChannel = (latitudeBandIndex + 0.5) / latitudeBandCount;
+        const checkerParity = (longitudeBandIndex + latitudeBandIndex) % 2;
+        const blueChannel = useChecker ? (checkerParity ? 0.2 : 0.85) : (1.0 - greenChannel)
+        const alphaChannel = alpha;
+
+        faceColours.push(redChannel, greenChannel, blueChannel, alphaChannel);
+    }
+
+    return faceColours;
 }
