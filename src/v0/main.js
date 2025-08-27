@@ -607,7 +607,7 @@ function generateSphereIndexArray() {
         }
     }
 
-    for(let longitudeIndex = 0; longitudeIndex < steps; ++longidtudeIndex) {
+    for(let longitudeIndex = 0; longitudeIndex < steps; ++longitudeIndex) {
         const lastRingCurrentVertex = ringVertexIndex(steps - 1, longitudeIndex);
         const lastRingNextVertex = ringVertexIndex(steps - 1, longitudeIndex + 1);
 
@@ -615,4 +615,38 @@ function generateSphereIndexArray() {
     }
 
     return indexArray;
+}
+
+function generateVertexNormals(vertexPositions) {
+    const vertexNormals = [];
+    const vertexCount = vertexPositions.length / 3;
+
+    for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
+        const abscissa = vertexPositions[3 * vertexIndex + 0];
+        const ordinate = vertexPositions[3 * vertexIndex + 1];
+        const applicate = vertexPositions[3 * vertexIndex + 2];
+
+        const length = Math.sqrt(
+            abscissa * abscissa
+            + ordinate * ordinate
+            + applicate * applicate
+        );
+
+        let normalU, normalV, normalW;
+
+        if(!(length > 0.0)) {
+            normalU = 0.0;
+            normalV = 0.0;
+            normalW = 1.0;
+        }
+        else {
+            normalU = abscissa / length;
+            normalV = ordinate / length;
+            normalW = applicate / length;
+        }
+
+        vertexNormals.push(normalU, normalV, normalW);
+    }
+
+    return vertexNormals;
 }
