@@ -16,15 +16,21 @@ const vertexShaderSource = `
     varying highp vec3 vLighting;
 
     void main(void) {
-        gl_Position = uProjectionMatrix*uModelViewMatrix*aVertexPosition;
+        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
         vTextureCoord = aTextureCoord;
-        highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+        highp vec3 ambientLight = vec3(0.5, 0.5, 0.5);
         highp vec3 directionalLightColor = vec3(1, 1, 1);
-        highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
-        highp vec4 transformedNormal = uNormalMatrix*vec4(aVertexNormal, 1.0);
+        highp vec3 directionalVector = normalize(vec3(0.75, 0.75, 0.75));
+        highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
 
-        highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
-        vLighting = ambientLight + (directionalLightColor*directional);
+        highp float directional = max(dot(
+                transformedNormal.xyz
+                , directionalVector
+            )
+            , 0.0
+        );
+
+        vLighting = ambientLight + (directionalLightColor * directional);
         }
     `;
 
@@ -36,7 +42,7 @@ const fragmentShaderSource = `
 
     void main(void) {
         highp vec4 textelColor = texture2D(uSampler, vTextureCoord);
-        gl_FragColor = vec4(textelColor.rgb*vLighting, textelColor.a);
+        gl_FragColor = vec4(textelColor.rgb * vLighting, textelColor.a);
     }
 `;
 
@@ -44,7 +50,18 @@ main();
 
 function main() {
     const canvas = document.querySelector("#gl-canvas");
-    const gl = canvas.getContext("webgl");
+    const gl = canvas.getContext("webgl2", {
+        antialias: true
+        , alpha: true
+        , premultipliedAlpha: true,
+    });
+
+    const scale = 2;
+
+    canvas.width = scale * canvas.clientWidth;
+    canvas.height = scale * canvas.clientHeight;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
     if(gl === null) {
         alert("Unable to initialize WebGL. Your browser may not support it.");
@@ -73,7 +90,7 @@ function main() {
     };
 
     const buffers = initBuffers(gl);
-    const texture = loadTexture(gl, "cubetexture.png");
+    const texture = loadTexture(gl, "R136a1.jpg");
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -83,10 +100,6 @@ function main() {
         now *= 0.001;
         deltaTime = now - then;
         then = now;
-
-        if(copyVideo) {
-            updateTexture(gl, texture, video);
-        }
 
         drawScene(gl, programInfo, buffers, texture, cubeRotation);
 
@@ -139,7 +152,7 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-function loadTexture(gl) {
+function loadTexture(gl, url) {
     const texture = gl.createTexture();
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -151,7 +164,7 @@ function loadTexture(gl) {
     const border = 0;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
-    const pixel = new Uint8Array([0, 0, 255, 255]);
+    const pixel = new Uint8Array([255, 255, 255, 255]);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -185,7 +198,7 @@ function loadTexture(gl) {
         }
     };
 
-    image.src = URL;
+    image.src = url;
 
     return texture;
 }
@@ -276,16 +289,16 @@ function initNormalBuffer(gl) {
 }
 
 function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const fieldOfView = (45*Math.PI)/180;
-    const aspect = gl.canvas.clientWidth/gl.canvas.clientHeight;
+    const fieldOfView = (45 * Math.PI) / 180;
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const zNear = 0.1;
-    const zFar = 100.0;
+    const zFar = 3840.0;
     const projectionMatrix = mat4.create();
 
     mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
@@ -295,28 +308,14 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
     mat4.translate(
         modelViewMatrix,
         modelViewMatrix,
-        [-0.0, 0.0, -6.0],
+        [-0.0, 0.0, -2500.0],
     );
 
     mat4.rotate(
         modelViewMatrix,
         modelViewMatrix,
         cubeRotation,
-        [0, 0, 1],
-    );
-
-    mat4.rotate(
-        modelViewMatrix,
-        modelViewMatrix,
-        cubeRotation*0.7,
-        [0, 1, 0],
-    );
-
-    mat4.rotate(
-        modelViewMatrix,
-        modelViewMatrix,
-        cubeRotation*0.3,
-        [1, 0, 0],
+        [1, 1, 0],
     );
 
     const normalMatrix = mat4.create();
@@ -574,7 +573,7 @@ function generateSphereVertexNormals(vertexPositions) {
  */
 function generateSphereFaceColours(vertexPositions, options = {}) {
     const faceColours = [];
-    const {latitudeBandCount = 8, longitudeBandCount = 16, useChecker = true, alpha = 1.0} = options;
+    const {latitudeBandCount = 32, longitudeBandCount = 64, useChecker = false, alpha = 1.0} = options;
     const vertexCount = Math.floor(vertexPositions.length / 3);
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
