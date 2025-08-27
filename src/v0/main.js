@@ -532,6 +532,7 @@ function generateSphereVAOs() {
     const indexArray = generateSphereIndexArray();
     const vertexNormals = generateSphereVertexNormals(vertexPositions);
     const faceColours = generateSphereFaceColours(vertexPositions);
+    const textureCoordinates = generateSphereTextureCoordinates(vertexPositions);
 }
 
 function generateSphereVertexArray() {
@@ -626,24 +627,18 @@ function generateSphereVertexNormals(vertexPositions) {
         const abscissa = vertexPositions[3 * vertexIndex + 0];
         const ordinate = vertexPositions[3 * vertexIndex + 1];
         const applicate = vertexPositions[3 * vertexIndex + 2];
-
-        const length = Math.sqrt(
-            abscissa * abscissa
-            + ordinate * ordinate
-            + applicate * applicate
-        );
-
+        const vectorLength = Math.sqrt(abscissa * abscissa + ordinate * ordinate + applicate * applicate);
         let normalU, normalV, normalW;
 
-        if(!(length > 0.0)) {
+        if(!(vectorLength > 0.0)) {
             normalU = 0.0;
             normalV = 0.0;
             normalW = 1.0;
         }
         else {
-            normalU = abscissa / length;
-            normalV = ordinate / length;
-            normalW = applicate / length;
+            normalU = abscissa / vectorLength;
+            normalV = ordinate / vectorLength;
+            normalW = applicate / vectorLength;
         }
 
         vertexNormals.push(normalU, normalV, normalW);
@@ -673,10 +668,10 @@ function generateSphereFaceColours(vertexPositions) {
         const abscissa = vertexPositions[3 * vertexIndex + 0];
         const ordinate = vertexPositions[3 * vertexIndex + 1];
         const applicate = vertexPositions[3 * vertexIndex + 2];
-        const length = Math.hypot(abscissa, ordinate, applicate) || 1.0;
-        const normalU = abscissa / length;
-        const normalV = ordinate / length;
-        const normalW = applicate / length;
+        const vectorLength = Math.hypot(abscissa, ordinate, applicate) || 1.0;
+        const normalU = abscissa / vectorLength;
+        const normalV = ordinate / vectorLength;
+        const normalW = applicate / vectorLength;
         const phi = Math.acos(Math.min(1, Math.max(-1, normalW)));
         let theta = Math.atan2(normalV, normalU);
 
@@ -698,4 +693,49 @@ function generateSphereFaceColours(vertexPositions) {
     }
 
     return faceColours;
+}
+
+function generateSphereTextureCoordinates(vertexPositions) {
+    const {seamUOffset = 0.0, pinPolesUTo = 0.0, flipV = false} = options;
+    const textureCoordinates = [];
+    const vertexCount = Math.floor(vertexPositions.length / 3);
+
+    for(let vertexIndex = 0; vertexIndex < vertexCount - 1, ++vertexIndex) {
+        const abscissa = vertexPositions[3 * vertexIndex + 0];
+        const ordinate = vertexPositions[3 * vertexIndex + 1];
+        const applicate = vertexPositions[3 * vertexIndex + 2];
+        const vectorLength = Math.hypot(abscissa, ordinate, applicate) || 1.0;
+        const normalU = abscissa / vectorLength;
+        const normalV = ordinate / vectorLength;
+        const normalW = applicate / vectorLength;
+        const clampedZ = Math.max(-1.0, Math.min(1.0, normalW));
+        const phi = Math.acos(clampedZ);
+        let theta = Math.atan2(normalV, normalU);
+
+        if(theta < 0) {
+            theta += 2 * Math.PI;
+        }
+
+        let textureU = (theta / (2 * Math.PI) + seamUOffset) % 1.0;
+
+        if(textureU < 0) {
+            textureU += 1.0;
+        }
+
+        let textureV = phi / Math.PI;
+        const atNorthPole = Math.abs(textureV - 0.0) < 1e-6;
+        const atSouthPole = Math.abs(textureV - 1.0) < 1e-6;
+
+        if(atNorthPole || atSouthPole) {
+            textureU = pinPolesUTo;
+        }
+
+        if(flipV) {
+            textureV = 1.0 - textureV;
+        }
+
+        textureCoordinates.push(textureU, textureV);
+    }
+
+    return textureCoordinates;
 }
