@@ -251,33 +251,19 @@ function initPositionBuffer(gl) {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    const positions = [
-        -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0, // front face
-        -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, -1.0, // back face
-        -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, // top face
-        -1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, -1.0, -1.0, 1.0, // bottom face
-        1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, // right face
-        -1.0, -1.0, -1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, -1.0, // left face
-    ];
+    const vertexPositions = generateSphereVertexArray()
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW);
 
     return positionBuffer;
 }
 
 function initColorBuffer(gl) {
-    const faceColors = [
-        [1.0, 1.0, 1.0, 1.0], // Front face: white
-        [1.0, 0.0, 0.0, 1.0], // Back face: red
-        [0.0, 1.0, 0.0, 1.0], // Top face: green
-        [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
-        [1.0, 1.0, 0.0, 1.0], // Right face: yellow
-        [1.0, 0.0, 1.0, 1.0], // Left face: purple
-    ];
-
+    const vertexPositions = generateSphereVertexArray();
+    const faceColours = generateSphereFaceColours(vertexPositions);
     let colors = [];
 
-    for(const c of faceColors) {
+    for(const c of faceColours) {
         colors = colors.concat(c, c, c, c);
     }
 
@@ -294,62 +280,35 @@ function initIndexBuffer(gl) {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
-    const indices = [
-        0,  1,  2, 0,  2,  3,    // front
-        4,  5,  6, 4,  6,  7,    // back
-        8,  9,  10, 8,  10, 11,   // top
-        12, 13, 14, 12, 14, 15,   // bottom
-        16, 17, 18, 16, 18, 19,   // right
-        20, 21, 22, 20, 22, 23,   // left
-    ];
+    const indexArray = generateSphereIndexArray();
 
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Float32Array(indexArray), gl.STATIC_DRAW);
 
     return indexBuffer;
 }
 
 function initTextureBuffer(gl) {
     const textureCoordBuffer = gl.createBuffer();
+    const vertexPositions = generateSphereVertexArray();
 
     gl.bindBuffer(gl.ARRAY_BUFFER, textureCoordBuffer);
 
-    const textureCoordinates = [
-    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // front
-    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // back
-    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // top
-    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // bottom
-    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // right
-    0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, // left
-    ];
+    const textureCoordinates = generateSphereTextureCoordinates(vertexPositions);
 
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(textureCoordinates),
-        gl.STATIC_DRAW,
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW,);
 
     return textureCoordBuffer;
 }
 
 function initNormalBuffer(gl) {
     const normalBuffer = gl.createBuffer();
+    const vertexPositions = generateSphereVertexArray();
 
     gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
 
-    const vertexNormals = [
-        0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, // front
-        0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, // back
-        0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, // top
-        0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, // bottom
-        1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, // right
-        -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, // left
-    ];
+    const vertexNormals = generateSphereVertexNormals(vertexPositions);
 
-    gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(vertexNormals),
-        gl.STATIC_DRAW,
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 
     return normalBuffer;
 }
@@ -527,14 +486,6 @@ function setNormalAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 }
 
-function generateSphereVAOs() {
-    const vertexPositions = generateSphereVertexArray()
-    const indexArray = generateSphereIndexArray();
-    const vertexNormals = generateSphereVertexNormals(vertexPositions);
-    const faceColours = generateSphereFaceColours(vertexPositions);
-    const textureCoordinates = generateSphereTextureCoordinates(vertexPositions);
-}
-
 function generateSphereVertexArray() {
     const vertexPositions = [];
 
@@ -695,12 +646,12 @@ function generateSphereFaceColours(vertexPositions) {
     return faceColours;
 }
 
-function generateSphereTextureCoordinates(vertexPositions) {
+function generateSphereTextureCoordinates(vertexPositions, options = {}) {
     const {seamUOffset = 0.0, pinPolesUTo = 0.0, flipV = false} = options;
     const textureCoordinates = [];
     const vertexCount = Math.floor(vertexPositions.length / 3);
 
-    for(let vertexIndex = 0; vertexIndex < vertexCount - 1, ++vertexIndex) {
+    for(let vertexIndex = 0; vertexIndex < vertexCount - 1; ++vertexIndex) {
         const abscissa = vertexPositions[3 * vertexIndex + 0];
         const ordinate = vertexPositions[3 * vertexIndex + 1];
         const applicate = vertexPositions[3 * vertexIndex + 2];
