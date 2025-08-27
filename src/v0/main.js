@@ -1,6 +1,8 @@
 let cubeRotation = 0.0;
 let deltaTime = 0;
 let copyVideo = false;
+const radius = 640;
+const steps = 64;
 
 const vertexShaderSource = `
     attribute vec4 aVertexPosition;
@@ -525,17 +527,21 @@ function setNormalAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexNormal);
 }
 
+function generateGeometry() {
+    const vertexPositions = generateSphereVertexArray()
+    const indexArray = generateSphereIndexArray();
+}
+
 function generateSphereVertexArray() {
     const vertexPositions = [];
-    const radius = 640;
-    const steps = 64;
 
-    for(let i = 0; i <= steps; ++i) {
+    vertexPositions.push(0, 0, radius);
+
+    for(let i = 1; i <= steps - 1; ++i) {
         const phi = Math.PI * i / steps;
 
         for(let j = 0; j <= steps; ++j) {
-            const theta = 2 * Math.PI * i / steps;
-
+            const theta = 2 * Math.PI * j / steps;
             const abscissa = radius * Math.sin(phi) * Math.cos(theta);
             const ordinate = radius * Math.sin(phi) * Math.sin(theta);
             const applicate = radius * Math.cos(phi);
@@ -544,9 +550,69 @@ function generateSphereVertexArray() {
         }
     }
 
-    console.log(vertexPositions);
+    vertexPositions.push(0, 0, -radius);
 
     return vertexPositions;
 }
 
-generateSphereVertexArray();
+function generateSphereIndexArray() {
+    const indexArray = [];
+
+    const northPoleIndex = 0;
+    const southPoleIndex = 1 + (steps - 1) * steps;
+
+    function ringVertexIndex(latitudeIndex, longitudeIndex) {
+        const wrappedLongitude = ((longitudeIndex % steps) + steps) % steps;
+        
+        return 1 + (latitudeIndex - 1) * steps + wrappedLongitude;
+    }
+
+    for(let longitudeIndex = 0; longitudeIndex < steps; ++longitudeIndex) {
+        const firstRingCurrentVertex = ringVertexIndex(1, longitudeIndex);
+        const firstRingNextVertex = ringVertexIndex(1, longitudeIndex + 1);
+
+        indexArray.push(northPoleIndex, firstRingCurrentVertex, firstRingNextVertex);
+    }
+
+    for(let latitudeIndex = 1; latitudeIndex <= steps - 2; ++latitudeIndex) {
+        for(let longitudeIndex = 0; longitudeIndex < steps; ++longitudeIndex) {
+            const currentRingCurrentColumnVertex = ringVertexIndex(
+                latitudeIndex
+                , longitudeIndex,
+            );
+
+            const nextRingCurrentColumnVertex = ringVertexIndex(
+                latitudeIndex + 1
+                , longitudeIndex,
+            );
+
+            const nextRingNextColumnVertex = ringVertexIndex(
+                latitudeIndex + 1
+                , longitudeIndex + 1,
+            );
+
+            const currentRingNextColumnVertex = ringVertexIndex(
+                latitudeIndex
+                , longitudeIndex + 1,
+            );
+
+            indexArray.push(
+                currentRingCurrentColumnVertex
+                , nextRingCurrentColumnVertex
+                , nextRingNextColumnVertex
+                , currentRingCurrentColumnVertex
+                , nextRingNextColumnVertex
+                , currentRingNextColumnVertex,
+            );
+        }
+    }
+
+    for(let longitudeIndex = 0; longitudeIndex < steps; ++longidtudeIndex) {
+        const lastRingCurrentVertex = ringVertexIndex(steps - 1, longitudeIndex);
+        const lastRingNextVertex = ringVertexIndex(steps - 1, longitudeIndex + 1);
+
+        indexArray.push(lastRingCurrentVertex, southPoleIndex, lastRingNextVertex);
+    }
+
+    return indexArray;
+}
