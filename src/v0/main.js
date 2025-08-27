@@ -73,8 +73,7 @@ function main() {
     };
 
     const buffers = initBuffers(gl);
-    const texture = initTexture(gl);
-    const video = setupVideo("Firefox.mp4");
+    const texture = loadTexture(gl, "cubetexture.png");
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -140,7 +139,7 @@ function loadShader(gl, type, source) {
     return shader;
 }
 
-function initTexture(gl) {
+function loadTexture(gl) {
     const texture = gl.createTexture();
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -170,66 +169,29 @@ function initTexture(gl) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
+    const image = new Image();
+
+    image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+
+        if(isPowerOf2(image.width) && isPowerOf2(image.height)) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        }
+        else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
+    };
+
+    image.src = URL;
+
     return texture;
 }
 
-function updateTexture(gl, texture, video) {
-    const level = 0;
-    const internalFormat = gl.RGBA;
-    const srcFormat = gl.RGBA;
-    const srcType = gl.UNSIGNED_BYTE;
-
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    
-    gl.texImage2D(
-        gl.TEXTURE_2D,
-        level,
-        internalFormat,
-        srcFormat,
-        srcType,
-        video,
-    );
-}
-
-function setupVideo(url) {
-    const video = document.createElement("video");
-    let playing = false;
-    let timeupdate = false;
-
-    video.playsInline = true;
-    video.muted = true;
-    video.loop = true;
-
-    video.addEventListener(
-        "playing", () => {
-            playing = true,
-            
-            checkReady();
-        },
-
-        true,
-    );
-
-    video.addEventListener(
-        "timeupdate", () => {
-            timeupdate = true;
-
-            checkReady();
-        },
-
-        true,
-    );
-
-    video.src = url;
-    video.play();
-
-    function checkReady() {
-        if(playing && timeupdate) {
-            copyVideo = true;
-        }
-    }
-
-    return video;
+function isPowerOf2(value) {
+    return(value & (value - 1)) === 0;
 }
 
 function initBuffers(gl) {
@@ -282,7 +244,7 @@ function initIndexBuffer(gl) {
 
     const indexArray = generateSphereIndexArray();
 
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Float32Array(indexArray), gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexArray), gl.STATIC_DRAW);
 
     return indexBuffer;
 }
@@ -394,7 +356,7 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
     gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
     {
-        const vertexCount = 36;
+        const vertexCount = (generateSphereIndexArray()).length;
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
 
@@ -599,7 +561,7 @@ function generateSphereVertexNormals(vertexPositions) {
 }
 
 /**
- * Generate per-vertex RGBA colours using latitude/longitude banding on a sphere.
+ * @brief Generate per-vertex RGBA colours using latitude/longitude banding on a sphere.
  * - Expects vertex positions of a sphere centered at the origin.
  * - Colours are assigned per-vertex.
  * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0, y0, z0, x1, y1, z1, ... , x_n, y_n, z_n]
@@ -610,7 +572,7 @@ function generateSphereVertexNormals(vertexPositions) {
  * @param {number} [options.alpha = 1.0] - Alpha channel (0... 1).
  * @returns {Float32Array} faceColours - Flat RGBA array per vertex.
  */
-function generateSphereFaceColours(vertexPositions) {
+function generateSphereFaceColours(vertexPositions, options = {}) {
     const faceColours = [];
     const {latitudeBandCount = 8, longitudeBandCount = 16, useChecker = true, alpha = 1.0} = options;
     const vertexCount = Math.floor(vertexPositions.length / 3);
@@ -651,7 +613,7 @@ function generateSphereTextureCoordinates(vertexPositions, options = {}) {
     const textureCoordinates = [];
     const vertexCount = Math.floor(vertexPositions.length / 3);
 
-    for(let vertexIndex = 0; vertexIndex < vertexCount - 1; ++vertexIndex) {
+    for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
         const abscissa = vertexPositions[3 * vertexIndex + 0];
         const ordinate = vertexPositions[3 * vertexIndex + 1];
         const applicate = vertexPositions[3 * vertexIndex + 2];
