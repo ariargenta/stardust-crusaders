@@ -1,4 +1,4 @@
-let cubeRotation = 0.0;
+let cartesianRotation = 0.0;
 let deltaTime = 0;
 let copyVideo = false;
 const radius = 640;
@@ -101,9 +101,9 @@ function main() {
         deltaTime = now - then;
         then = now;
 
-        drawScene(gl, programInfo, buffers, texture, cubeRotation);
+        drawScene(gl, programInfo, buffers, texture, cartesianRotation);
 
-        cubeRotation += deltaTime;
+        cartesianRotation += deltaTime;
 
         requestAnimationFrame(render);
     }
@@ -288,7 +288,7 @@ function initNormalBuffer(gl) {
     return normalBuffer;
 }
 
-function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
+function drawScene(gl, programInfo, buffers, texture, cartesianRotation) {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
@@ -308,13 +308,13 @@ function drawScene(gl, programInfo, buffers, texture, cubeRotation) {
     mat4.translate(
         modelViewMatrix,
         modelViewMatrix,
-        [-0.0, 0.0, -2500.0],
+        [0.0, 0.0, -2500.0],
     );
 
     mat4.rotate(
         modelViewMatrix,
         modelViewMatrix,
-        cubeRotation,
+        cartesianRotation,
         [1, 1, 0],
     );
 
@@ -560,20 +560,21 @@ function generateSphereVertexNormals(vertexPositions) {
 }
 
 /**
- * @brief Generate per-vertex RGBA colours using latitude/longitude banding on a sphere.
- * - Expects vertex positions of a sphere centered at the origin.
- * - Colours are assigned per-vertex.
- * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0, y0, z0, x1, y1, z1, ... , x_n, y_n, z_n]
+ * @brief - Generate per-vertex colour data for a procedurally generated sphere
+ * @details - Maps geometric information into RGBA colours using latitude/longitude banding on a sphere
+ * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0,y0,z0, x1,y1,z1, ...]
  * @param {Object} [options]
- * @param {number} [options.latitudeBandCount = 8] - Number of latitude bands (φ direction).
- * @param {number} [options.longitudeBandCount = 16] - Number of longitude bands (θ direction).
- * @param {boolean} [options.useChecker = false] - If true, toogles a checkerboard accent.
- * @param {number} [options.alpha = 1.0] - Alpha channel (0... 1).
- * @returns {Float32Array} faceColours - Flat RGBA array per vertex.
+ * @param {number} [options.latitudeBandCount = 64] - Number of latitude bands (φ direction)
+ * @param {number} [options.longitudeBandCount = 64] - Number of longitude bands (θ direction)
+ * @param {boolean} [options.useChecker = false] - If true, toogles a checkerboard accent
+ * @param {number} [options.alpha = 1.0] - Alpha channel (0-1)
+ * @returns {Float32Array} - Flat RGBA array per vertex
+ * @throws {TypeError} - If vertexPositions is not divisible by 3
+ * @example - const colours = generateSphereFaceColours(sphereVerts, {useChecker: true});
  */
 function generateSphereFaceColours(vertexPositions, options = {}) {
     const faceColours = [];
-    const {latitudeBandCount = 32, longitudeBandCount = 64, useChecker = false, alpha = 1.0} = options;
+    const {latitudeBandCount = 64, longitudeBandCount = 64, useChecker = false, alpha = 1.0} = options;
     const vertexCount = Math.floor(vertexPositions.length / 3);
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
@@ -584,7 +585,8 @@ function generateSphereFaceColours(vertexPositions, options = {}) {
         const normalU = abscissa / vectorLength;
         const normalV = ordinate / vectorLength;
         const normalW = applicate / vectorLength;
-        const phi = Math.acos(Math.min(1, Math.max(-1, normalW)));
+        const clampedZ = Math.min(1, Math.max(-1, normalW)) // Clamping prevents NaN by rounding errors.
+        const phi = Math.acos(clampedZ);
         let theta = Math.atan2(normalV, normalU);
 
         if(theta < 0) {
@@ -607,10 +609,20 @@ function generateSphereFaceColours(vertexPositions, options = {}) {
     return faceColours;
 }
 
+/**
+ * @brief - Generates UV texture coordinates for sphere vertices
+ * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0,y0,z0, x1,y1,z1, ...]
+ * @param {Object} [options]
+ * @param {number} [options.seamUOffset=0.0] - Rotates texture around Y-axis to position seam (0-1)
+ * @param {number} [options.pinPolesUTo=0.6] - Fixed U coordinate for poles to avoid texture stretching (0-1)
+ * @param {boolean} [options.flipV=false] - Inverts V coordinate for texture orientation
+ * @returns {Float32Array} UV coordinates
+ */
 function generateSphereTextureCoordinates(vertexPositions, options = {}) {
-    const {seamUOffset = 0.0, pinPolesUTo = 0.0, flipV = false} = options;
+    const {seamUOffset = 0.0, pinPolesUTo = 0.5, flipV = false} = options;
     const textureCoordinates = [];
     const vertexCount = Math.floor(vertexPositions.length / 3);
+    const POLE_THRESHOLD = 1e-6;
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
         const abscissa = vertexPositions[3 * vertexIndex + 0];
@@ -620,7 +632,7 @@ function generateSphereTextureCoordinates(vertexPositions, options = {}) {
         const normalU = abscissa / vectorLength;
         const normalV = ordinate / vectorLength;
         const normalW = applicate / vectorLength;
-        const clampedZ = Math.max(-1.0, Math.min(1.0, normalW));
+        const clampedZ = Math.max(-1.0, Math.min(1.0, normalW));    // Clamping prevents NaN by rounding errors.
         const phi = Math.acos(clampedZ);
         let theta = Math.atan2(normalV, normalU);
 
@@ -635,10 +647,10 @@ function generateSphereTextureCoordinates(vertexPositions, options = {}) {
         }
 
         let textureV = phi / Math.PI;
-        const atNorthPole = Math.abs(textureV - 0.0) < 1e-6;
-        const atSouthPole = Math.abs(textureV - 1.0) < 1e-6;
+        // Detection of singularities at the poles
+        const atPole = textureV < POLE_THRESHOLD || textureV > (1.0 - POLE_THRESHOLD);
 
-        if(atNorthPole || atSouthPole) {
+        if(atPole) {
             textureU = pinPolesUTo;
         }
 
