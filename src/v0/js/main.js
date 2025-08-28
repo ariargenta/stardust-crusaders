@@ -90,7 +90,7 @@ function main() {
     };
 
     const buffers = initBuffers(gl);
-    const texture = loadTexture(gl, "R136a1.jpg");
+    const texture = loadTexture(gl, "./styles/assets/R136a1.jpg");
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -614,7 +614,7 @@ function generateSphereFaceColours(vertexPositions, options = {}) {
  * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0,y0,z0, x1,y1,z1, ...]
  * @param {Object} [options]
  * @param {number} [options.seamUOffset=0.0] - Rotates texture around Y-axis to position seam (0-1)
- * @param {number} [options.pinPolesUTo=0.6] - Fixed U coordinate for poles to avoid texture stretching (0-1)
+ * @param {number} [options.pinPolesUTo=0.5] - Fixed U coordinate for poles to avoid texture stretching (0-1)
  * @param {boolean} [options.flipV=false] - Inverts V coordinate for texture orientation
  * @returns {Float32Array} UV coordinates
  */
@@ -622,7 +622,6 @@ function generateSphereTextureCoordinates(vertexPositions, options = {}) {
     const {seamUOffset = 0.0, pinPolesUTo = 0.5, flipV = false} = options;
     const textureCoordinates = [];
     const vertexCount = Math.floor(vertexPositions.length / 3);
-    const POLE_THRESHOLD = 1e-6;
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
         const abscissa = vertexPositions[3 * vertexIndex + 0];
@@ -635,6 +634,7 @@ function generateSphereTextureCoordinates(vertexPositions, options = {}) {
         const clampedZ = Math.max(-1.0, Math.min(1.0, normalW));    // Clamping prevents NaN by rounding errors.
         const phi = Math.acos(clampedZ);
         let theta = Math.atan2(normalV, normalU);
+        const POLE_THRESHOLD = 1e-6;
 
         if(theta < 0) {
             theta += 2 * Math.PI;
