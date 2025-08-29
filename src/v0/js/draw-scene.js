@@ -9,7 +9,9 @@
  * @param {Array} geometryData.indices - Triangle indices for element drawing
  * @returns {void}
  */
-function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometryData) {
+function drawScene(
+    gl, programInfo, geometryBuffers, textures, geometryData, cartesianRotation
+) {
     const redChannel = 0.0;
     const greenChannel = 0.0;
     const blueChannel = 0.0;
@@ -50,12 +52,16 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometr
     mat4.invert(normalMatrix, modelViewMatrix);
     mat4.transpose(normalMatrix, normalMatrix);
 
-    setPositionAttribute(gl, buffers, programInfo);
-    setTextureAttribute(gl, buffers, programInfo);
+    setPositionAttribute(gl, geometryBuffers.mainBuffer, programInfo);
+    setPositionAttribute(gl, geometryBuffers.secondaryBuffer, programInfo);
+    setTextureAttribute(gl, textures.mainTexture, programInfo);
+    setTextureAttribute(gl, textures.secondaryTexture, programInfo);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.mainBuffer.indices);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.secondaryBuffer.indices);
 
-    setNormalAttribute(gl, buffers, programInfo);
+    setNormalAttribute(gl, geometryBuffers.mainBuffer, programInfo);
+    setNormalAttribute(gl, geometryBuffers.secondaryBuffer, programInfo);
 
     gl.useProgram(programInfo.program);
 
@@ -78,11 +84,11 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometr
     );
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.bindTexture(gl.TEXTURE_2D, textures.mainTexture);
     gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
     {
-        const indexCount = geometryData.indices.length;
+        const indexCount = geometryData.mainData.indices.length;
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
 
@@ -99,14 +105,14 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometr
  * @param {number} programInfo.attribLocations.vertexPosition - Position attribute location
  * @returns {void}
  */
-function setPositionAttribute(gl, buffers, programInfo) {
+function setPositionAttribute(gl, geometryBuffers, programInfo) {
     const numComponents = 3;
     const type = gl.FLOAT;
     const normalize = false;
     const stride = 0;
     const offset = 0;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+    gl.bindBuffer(gl.ARRAY_BUFFER, geometryBuffers.position);
 
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexPosition,
@@ -121,36 +127,6 @@ function setPositionAttribute(gl, buffers, programInfo) {
 }
 
 /**
- * @brief - Sets up the color attribute for vertex shader input
- * @param {WebGLRenderingContext} gl - WebGL rendering context
- * @param {Object} buffers - Vertex buffer objects container
- * @param {WebGLBuffer} buffers.color - Buffer containing vertex color values (RGBA)
- * @param {Object} programInfo - Shader program attribute locations
- * @param {number} programInfo.attribLocations.vertexColor - Color attribute location
- * @returns {void}
- */
-function setColorAttribute(gl, buffers, programInfo) {
-    const numComponents = 4;
-    const type = gl.FLOAT;
-    const normalize = false;
-    const stride = 0;
-    const offset = 0;
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.color);
-    
-    gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexColor,
-        numComponents,
-        type,
-        normalize,
-        stride,
-        offset,
-    );
-
-    gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
-}
-
-/**
  * @brief - Sets up the texture coordinate attribute for vertex shader input
  * @param {WebGLRenderingContext} gl - WebGL rendering context
  * @param {Object} buffers - Vertex buffer objects container
@@ -159,14 +135,14 @@ function setColorAttribute(gl, buffers, programInfo) {
  * @param {number} programInfo.attribLocations.textureCoord - Texture coordinate attribute location
  * @returns {void}
  */
-function setTextureAttribute(gl, buffers, programInfo) {
+function setTextureAttribute(gl, geometryBuffers, programInfo) {
     const num = 2;
     const type = gl.FLOAT;
     const normalize = false;
     const stride = 0;
     const offset = 0;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.textureCoord);
+    gl.bindBuffer(gl.ARRAY_BUFFER, geometryBuffers.textureCoord);
 
     gl.vertexAttribPointer(
         programInfo.attribLocations.textureCoord,
@@ -189,14 +165,14 @@ function setTextureAttribute(gl, buffers, programInfo) {
  * @param {number} programInfo.attribLocations.vertexNormal - Normal attribute location
  * @returns {void}
  */
-function setNormalAttribute(gl, buffers, programInfo) {
+function setNormalAttribute(gl, geometryBuffers, programInfo) {
     const numComponents = 3;
     const type = gl.FLOAT;
     const normalize = false;
     const stride = 0;
     const offset = 0;
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffers.normal);
+    gl.bindBuffer(gl.ARRAY_BUFFER, geometryBuffers.normal);
     
     gl.vertexAttribPointer(
         programInfo.attribLocations.vertexNormal,

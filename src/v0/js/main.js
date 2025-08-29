@@ -73,9 +73,13 @@ async function main() {
     };
 
     const mainTextureURI = "./styles/assets/textures/R136a1.jpg";
-    const geometryData = generateGeometryData();
-    const buffers = initBuffers(gl, geometryData);
-    const texture = loadTexture(gl, mainTextureURI);
+    const secondaryTextureURI = "./styles/assets/textures/Stephenson218.png";
+    const mainGeometryData = generateGeometryData();
+    const secondaryGeometryData = generateGeometryData();
+    const mainGeometryBuffers = initBuffers(gl, mainGeometryData);
+    const secondaryGeometryBuffers = initBuffers(gl, secondaryGeometryData);
+    const mainTexture = loadTexture(gl, mainTextureURI);
+    const secondaryTexture = loadTexture(gl, secondaryTextureURI);
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
@@ -88,13 +92,28 @@ async function main() {
         deltaTime = now - then;
         then = now;
 
+        const geometryData = {
+            mainData: mainGeometryData
+            , secondaryData: secondaryGeometryData
+        };
+
+        const geometryBuffers = {
+            mainBuffer: mainGeometryBuffers
+            , secondaryBuffer: secondaryGeometryBuffers
+        };
+
+        const textures = {
+            mainTexture: mainTexture
+            , secondaryTexture: secondaryTexture
+        };
+
         drawScene(
             gl
             , programInfo
-            , buffers
-            , texture
-            , cartesianRotation
-            , geometryData,
+            , geometryBuffers
+            , textures
+            , geometryData
+            , cartesianRotation,
         );
 
         cartesianRotation += deltaTime;
