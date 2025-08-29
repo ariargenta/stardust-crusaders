@@ -11,9 +11,6 @@
  * @returns {WebGLBuffer} normal - Vertex normals buffer
  * @returns {WebGLBuffer} textureCoord - UV coordinates buffer
  * @returns {WebGLBuffer} indices - Triangle indices buffer
- * @example
- * const geometry = generateGeometryData();
- * const buffers = initBuffers(gl, geometry);
  */
 function initBuffers(gl, geometryData) {
     const positionBuffer = initPositionBuffer(gl, geometryData);

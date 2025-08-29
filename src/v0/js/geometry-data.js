@@ -6,8 +6,6 @@
  * @returns {Float32Array} normals - Vertex normals [nx,ny,nz, ...]
  * @returns {Float32Array} colours - Vertex colors [r,g,b,a, ...]
  * @returns {Float32Array} texture - UV coordinates [u,v, ...]
- * @example
- * // const geometry = generateGeometryData();
  */
 function generateGeometryData() {
     const radius = 640;
@@ -38,8 +36,6 @@ function generateGeometryData() {
  * @param {number} steps - Determines mesh resolution
  * @returns {Array<number>} - Flat array of vertex positions [x0,y0,z0, x1,y1,z1, ...]
  * @details - Uses spherical coordinates (r,θ,φ) for position calculation
- * @example
- * // const vertices = generateSphereVertexArray();
  */
 function generateSphereVertexArray(radius, steps) {
     let vertexPositions = [];
@@ -74,8 +70,6 @@ function generateSphereVertexArray(radius, steps) {
  * - Creates south pole triangles (fan)
  * - Uses counter-clockwise winding order for proper face culling
  * - Handles wraparound at longitude seam
- * @example
- * // const indices = generateSphereIndexArray();
  */
 function generateSphereIndexArray(steps) {
     let indexArray = [];

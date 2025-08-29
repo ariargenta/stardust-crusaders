@@ -1,3 +1,14 @@
+/**
+ * @brief - Renders a complete 3D scene with textures, lighting, and transformations
+ * @param {WebGLRenderingContext} gl - WebGL rendering context
+ * @param {Object} programInfo - Shader program information and attribute/uniform locations
+ * @param {Object} buffers - Vertex buffer objects containing geometry data
+ * @param {WebGLTexture} texture - Texture object to apply to the geometry
+ * @param {number} cartesianRotation - Rotation angle in radians for scene transformation
+ * @param {Object} geometryData - Geometry data containing indices and vertex information
+ * @param {Array} geometryData.indices - Triangle indices for element drawing
+ * @returns {void}
+ */
 function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometryData) {
     const redChannel = 0.0;
     const greenChannel = 0.0;
@@ -79,6 +90,15 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometr
     }
 }
 
+/**
+ * @brief - Sets up the position attribute for vertex shader input
+ * @param {WebGLRenderingContext} gl - WebGL rendering context
+ * @param {Object} buffers - Vertex buffer objects container
+ * @param {WebGLBuffer} buffers.position - Buffer containing vertex position coordinates (XYZ)
+ * @param {Object} programInfo - Shader program attribute locations
+ * @param {number} programInfo.attribLocations.vertexPosition - Position attribute location
+ * @returns {void}
+ */
 function setPositionAttribute(gl, buffers, programInfo) {
     const numComponents = 3;
     const type = gl.FLOAT;
@@ -100,6 +120,15 @@ function setPositionAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
 }
 
+/**
+ * @brief - Sets up the color attribute for vertex shader input
+ * @param {WebGLRenderingContext} gl - WebGL rendering context
+ * @param {Object} buffers - Vertex buffer objects container
+ * @param {WebGLBuffer} buffers.color - Buffer containing vertex color values (RGBA)
+ * @param {Object} programInfo - Shader program attribute locations
+ * @param {number} programInfo.attribLocations.vertexColor - Color attribute location
+ * @returns {void}
+ */
 function setColorAttribute(gl, buffers, programInfo) {
     const numComponents = 4;
     const type = gl.FLOAT;
@@ -121,6 +150,15 @@ function setColorAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
 }
 
+/**
+ * @brief - Sets up the texture coordinate attribute for vertex shader input
+ * @param {WebGLRenderingContext} gl - WebGL rendering context
+ * @param {Object} buffers - Vertex buffer objects container
+ * @param {WebGLBuffer} buffers.textureCoord - Buffer containing UV texture coordinates
+ * @param {Object} programInfo - Shader program attribute locations
+ * @param {number} programInfo.attribLocations.textureCoord - Texture coordinate attribute location
+ * @returns {void}
+ */
 function setTextureAttribute(gl, buffers, programInfo) {
     const num = 2;
     const type = gl.FLOAT;
@@ -142,6 +180,15 @@ function setTextureAttribute(gl, buffers, programInfo) {
     gl.enableVertexAttribArray(programInfo.attribLocations.textureCoord);
 }
 
+/**
+ * @brief - Sets up the normal attribute for vertex shader input
+ * @param {WebGLRenderingContext} gl - WebGL rendering context
+ * @param {Object} buffers - Vertex buffer objects container
+ * @param {WebGLBuffer} buffers.normal - Buffer containing vertex normal vectors
+ * @param {Object} programInfo - Shader program attribute locations
+ * @param {number} programInfo.attribLocations.vertexNormal - Normal attribute location
+ * @returns {void}
+ */
 function setNormalAttribute(gl, buffers, programInfo) {
     const numComponents = 3;
     const type = gl.FLOAT;
