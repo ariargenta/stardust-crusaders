@@ -1,10 +1,9 @@
-import {initBuffers} from "./buffer-mgmt.js";
+import {initBuffers} from "./init-buffers.js";
 import {drawScene} from "./draw-scene.js";
+import {generateGeometryData} from "./geometry-data.js";
 
 let cartesianRotation = 0.0;
 let deltaTime = 0;
-const radius = 640;
-const steps = 64;
 
 main();
 
@@ -22,7 +21,10 @@ async function main() {
     canvas.width = scale * canvas.clientWidth;
     canvas.height = scale * canvas.clientHeight;
 
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    const originX = 0;
+    const originY = 0;
+
+    gl.viewport(originX, originY, canvas.width, canvas.height);
 
     if(gl === null) {
         alert("Unable to initialize WebGL. Your browser may not support it.");
@@ -70,7 +72,8 @@ async function main() {
     };
 
     const mainTextureURI = "./styles/assets/textures/R136a1.jpg";
-    const buffers = initBuffers(gl);
+    const geometryData = generateGeometryData();
+    const buffers = initBuffers(gl, geometryData);
     const texture = loadTexture(gl, mainTextureURI);
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -82,7 +85,14 @@ async function main() {
         deltaTime = now - then;
         then = now;
 
-        drawScene(gl, programInfo, buffers, texture, cartesianRotation);
+        drawScene(
+            gl
+            , programInfo
+            , buffers
+            , texture
+            , cartesianRotation
+            , geometryData,
+        );
 
         cartesianRotation += deltaTime;
 

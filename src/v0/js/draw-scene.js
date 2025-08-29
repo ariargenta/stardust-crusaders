@@ -1,6 +1,12 @@
-function drawScene(gl, programInfo, buffers, texture, cartesianRotation) {
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
-    gl.clearDepth(1.0);
+function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometryData) {
+    const redChannel = 1.0;
+    const greenChannel = 1.0;
+    const blueChannel = 1.0;
+    const alphaTransparency = 1.0;
+    const defaultDepth = 1.0;
+
+    gl.clearColor(redChannel, greenChannel, blueChannel, alphaTransparency);
+    gl.clearDepth(defaultDepth);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -16,16 +22,16 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation) {
     const modelViewMatrix = mat4.create();
 
     mat4.translate(
-        modelViewMatrix,
-        modelViewMatrix,
-        [0.0, 0.0, -2500.0],
+        modelViewMatrix
+        , modelViewMatrix
+        , [0.0, 0.0, -2500.0],
     );
 
     mat4.rotate(
-        modelViewMatrix,
-        modelViewMatrix,
-        cartesianRotation,
-        [1, 1, 0],
+        modelViewMatrix
+        , modelViewMatrix
+        , cartesianRotation
+        , [1, 1, 0],
     );
 
     const normalMatrix = mat4.create();
@@ -65,7 +71,7 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation) {
     gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
     {
-        const vertexCount = (generateSphereIndexArray()).length;
+        const vertexCount = (geometryData.positions).length;
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
 

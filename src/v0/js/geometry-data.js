@@ -1,5 +1,29 @@
+const radius = 640;
+const steps = 64;
+
+function generateGeometryData() {
+    const vertexArray = new Float32Array(generateSphereVertexArray());
+    const indexArray = new Float32Array(generateSphereIndexArray());
+    const vertexNormals = new Float32Array(generateSphereVertexNormals(vertexArray));
+    const faceColours = new Float32Array(generateSphereFaceColours(vertexArray));
+
+    const textureCoordinates = new Float32Array(
+        generateSphereTextureCoordinates(vertexArray)
+    );
+
+    const geometryData = {
+        positions: vertexArray
+        , indices: indexArray
+        , normals: vertexNormals
+        , colours: faceColours
+        , texture: textureCoordinates,
+    };
+
+    return geometryData;
+}
+
 function generateSphereVertexArray() {
-    const vertexPositions = [];
+    let vertexPositions = [];
 
     vertexPositions.push(0, 0, radius);
 
@@ -22,7 +46,7 @@ function generateSphereVertexArray() {
 }
 
 function generateSphereIndexArray() {
-    const indexArray = [];
+    let indexArray = [];
     const northPoleIndex = 0;
     const southPoleIndex = 1 + (steps - 1) * steps;
 
@@ -82,8 +106,9 @@ function generateSphereIndexArray() {
     return indexArray;
 }
 
-function generateSphereVertexNormals(vertexPositions) {
-    const vertexNormals = [];
+function generateSphereVertexNormals(vertexArray) {
+    let vertexNormals = [];
+    const vertexPositions = vertexArray;
     const vertexCount = vertexPositions.length / 3;
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
@@ -123,9 +148,10 @@ function generateSphereVertexNormals(vertexPositions) {
  * @throws {TypeError} - If vertexPositions is not divisible by 3
  * @example - const colours = generateSphereFaceColours(sphereVerts, {useChecker: true});
  */
-function generateSphereFaceColours(vertexPositions, options = {}) {
-    const faceColours = [];
+function generateSphereFaceColours(vertexArray, options = {}) {
+    let faceColours = [];
     const {latitudeBandCount = 64, longitudeBandCount = 64, useChecker = false, alpha = 1.0} = options;
+    const vertexPositions = vertexArray;
     const vertexCount = Math.floor(vertexPositions.length / 3);
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
@@ -169,9 +195,10 @@ function generateSphereFaceColours(vertexPositions, options = {}) {
  * @param {boolean} [options.flipV=false] - Inverts V coordinate for texture orientation
  * @returns {Float32Array} UV coordinates
  */
-function generateSphereTextureCoordinates(vertexPositions, options = {}) {
+function generateSphereTextureCoordinates(vertexArray, options = {}) {
     const {seamUOffset = 0.0, pinPolesUTo = 0.5, flipV = false} = options;
-    const textureCoordinates = [];
+    let textureCoordinates = [];
+    const vertexPositions = vertexArray;
     const vertexCount = Math.floor(vertexPositions.length / 3);
 
     for(let vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex) {
@@ -214,3 +241,5 @@ function generateSphereTextureCoordinates(vertexPositions, options = {}) {
 
     return textureCoordinates;
 }
+
+export {generateGeometryData};
