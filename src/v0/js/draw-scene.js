@@ -71,11 +71,11 @@ function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometr
     gl.uniform1i(programInfo.uniformLocations.uSampler, 0);
 
     {
-        const vertexCount = (geometryData.positions).length;
+        const indexCount = geometryData.indices.length;
         const type = gl.UNSIGNED_SHORT;
         const offset = 0;
 
-        gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+        gl.drawElements(gl.TRIANGLES, indexCount, type, offset);
     }
 }
 

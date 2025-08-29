@@ -3,7 +3,7 @@ const steps = 64;
 
 function generateGeometryData() {
     const vertexArray = new Float32Array(generateSphereVertexArray());
-    const indexArray = new Float32Array(generateSphereIndexArray());
+    const indexArray = new Uint16Array(generateSphereIndexArray());
     const vertexNormals = new Float32Array(generateSphereVertexNormals(vertexArray));
     const faceColours = new Float32Array(generateSphereFaceColours(vertexArray));
 
@@ -30,7 +30,7 @@ function generateSphereVertexArray() {
     for(let i = 1; i <= steps - 1; ++i) {
         const phi = Math.PI * i / steps;
 
-        for(let j = 0; j <= steps; ++j) {
+        for(let j = 0; j < steps; ++j) {
             const theta = 2 * Math.PI * j / steps;
             const abscissa = radius * Math.sin(phi) * Math.cos(theta);
             const ordinate = radius * Math.sin(phi) * Math.sin(theta);
