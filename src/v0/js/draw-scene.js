@@ -1,7 +1,7 @@
 function drawScene(gl, programInfo, buffers, texture, cartesianRotation, geometryData) {
-    const redChannel = 1.0;
-    const greenChannel = 1.0;
-    const blueChannel = 1.0;
+    const redChannel = 0.0;
+    const greenChannel = 0.0;
+    const blueChannel = 0.0;
     const alphaTransparency = 1.0;
     const defaultDepth = 1.0;
 

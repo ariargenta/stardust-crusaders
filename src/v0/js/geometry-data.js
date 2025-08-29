@@ -8,9 +8,6 @@
  * @returns {Float32Array} texture - UV coordinates [u,v, ...]
  * @example
  * // const geometry = generateGeometryData();
- * // Use geometry.positions for vertex positions
- * // Use geometry.indices for triangle definitions
- * // etc.
  */
 function generateGeometryData() {
     const radius = 640;
@@ -42,11 +39,7 @@ function generateGeometryData() {
  * @returns {Array<number>} - Flat array of vertex positions [x0,y0,z0, x1,y1,z1, ...]
  * @details - Uses spherical coordinates (r,θ,φ) for position calculation
  * @example
- * const vertices = generateSphereVertexArray();
- * // For steps=4, radius=1, creates:
- * // - North pole:    [0,0,1]
- * // - Middle rings:  12 vertices
- * // - South pole:    [0,0,-1]
+ * // const vertices = generateSphereVertexArray();
  */
 function generateSphereVertexArray(radius, steps) {
     let vertexPositions = [];
@@ -82,11 +75,7 @@ function generateSphereVertexArray(radius, steps) {
  * - Uses counter-clockwise winding order for proper face culling
  * - Handles wraparound at longitude seam
  * @example
- * const indices = generateSphereIndexArray();
- * // For steps=4, creates indices for:
- * // - 4 triangles for north pole
- * // - 8 triangles for middle band
- * // - 4 triangles for south pole
+ * // const indices = generateSphereIndexArray();
  */
 function generateSphereIndexArray(steps) {
     let indexArray = [];
@@ -209,9 +198,9 @@ function generateSphereVertexNormals(vertexArray) {
  * @example
  * // const vertices = new Float32Array([0,0,1, 1,0,0, 0,1,0]);
  * // const colors = generateSphereFaceColours(vertices, {
- * //  latitudeBandCount: 32,
- * //  useChecker: true,
- * //  alpha: 0.8
+ * //    latitudeBandCount: 32,
+ * //    useChecker: true,
+ * //    alpha: 0.8
  * // });
  */
 function generateSphereFaceColours(vertexArray, options = {}) {
@@ -268,8 +257,8 @@ function generateSphereFaceColours(vertexArray, options = {}) {
  * @example
  * // const vertices = new Float32Array([0,0,1, 1,0,0, 0,1,0]);
  * // const uvs = generateSphereTextureCoordinates(vertices, {
- * //  seamUOffset: 0.25,
- * //  flipV: true
+ * //    seamUOffset: 0.25,
+ * //    flipV: true
  * // });
  */
 function generateSphereTextureCoordinates(vertexArray, options = {}) {

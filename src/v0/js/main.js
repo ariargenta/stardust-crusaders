@@ -2,9 +2,6 @@ import {initBuffers} from "./init-buffers.js";
 import {drawScene} from "./draw-scene.js";
 import {generateGeometryData} from "./geometry-data.js";
 
-let cartesianRotation = 0.0;
-let deltaTime = 0;
-
 main();
 
 async function main() {
@@ -78,6 +75,8 @@ async function main() {
 
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
+    let cartesianRotation = 0.0;
+    let deltaTime = 0;
     let then = 0;
 
     function render(now) {
