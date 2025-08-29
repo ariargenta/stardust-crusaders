@@ -1,9 +1,22 @@
-const radius = 640;
-const steps = 64;
-
+/**
+ * @brief - Creates a complete sphere mesh with consistent topology
+ * @returns {Object} - Object containing all geometry arrays
+ * @returns {Float32Array} positions - Vertex positions [x,y,z, ...]
+ * @returns {Uint16Array} indices - Triangle indices [i0,i1,i2, ...]
+ * @returns {Float32Array} normals - Vertex normals [nx,ny,nz, ...]
+ * @returns {Float32Array} colours - Vertex colors [r,g,b,a, ...]
+ * @returns {Float32Array} texture - UV coordinates [u,v, ...]
+ * @example
+ * // const geometry = generateGeometryData();
+ * // Use geometry.positions for vertex positions
+ * // Use geometry.indices for triangle definitions
+ * // etc.
+ */
 function generateGeometryData() {
-    const vertexArray = new Float32Array(generateSphereVertexArray());
-    const indexArray = new Uint16Array(generateSphereIndexArray());
+    const radius = 640;
+    const steps = 64;
+    const vertexArray = new Float32Array(generateSphereVertexArray(radius, steps));
+    const indexArray = new Uint16Array(generateSphereIndexArray(steps));
     const vertexNormals = new Float32Array(generateSphereVertexNormals(vertexArray));
     const faceColours = new Float32Array(generateSphereFaceColours(vertexArray));
 
@@ -22,7 +35,20 @@ function generateGeometryData() {
     return geometryData;
 }
 
-function generateSphereVertexArray() {
+/**
+ * @brief - Generates vertex positions for a UV sphere
+ * @param {number} radius - Determines size of sphere in world units
+ * @param {number} steps - Determines mesh resolution
+ * @returns {Array<number>} - Flat array of vertex positions [x0,y0,z0, x1,y1,z1, ...]
+ * @details - Uses spherical coordinates (r,θ,φ) for position calculation
+ * @example
+ * const vertices = generateSphereVertexArray();
+ * // For steps=4, radius=1, creates:
+ * // - North pole:    [0,0,1]
+ * // - Middle rings:  12 vertices
+ * // - South pole:    [0,0,-1]
+ */
+function generateSphereVertexArray(radius, steps) {
     let vertexPositions = [];
 
     vertexPositions.push(0, 0, radius);
@@ -45,7 +71,24 @@ function generateSphereVertexArray() {
     return vertexPositions;
 }
 
-function generateSphereIndexArray() {
+/**
+ * @brief - Generates triangle indices for a UV sphere mesh
+ * @param {number} steps - Determines mesh resolution
+ * @returns {Array<number>} - Flat array of vertex indices defining triangles [i0,i1,i2, i3,i4,i5, ...]
+ * @details
+ * - Creates north pole triangles (fan)
+ * - Creates middle latitude bands (quad strips split into triangles)
+ * - Creates south pole triangles (fan)
+ * - Uses counter-clockwise winding order for proper face culling
+ * - Handles wraparound at longitude seam
+ * @example
+ * const indices = generateSphereIndexArray();
+ * // For steps=4, creates indices for:
+ * // - 4 triangles for north pole
+ * // - 8 triangles for middle band
+ * // - 4 triangles for south pole
+ */
+function generateSphereIndexArray(steps) {
     let indexArray = [];
     const northPoleIndex = 0;
     const southPoleIndex = 1 + (steps - 1) * steps;
@@ -106,6 +149,17 @@ function generateSphereIndexArray() {
     return indexArray;
 }
 
+/**
+ * @brief - Generates normal vectors for each vertex of a sphere
+ * @param {Array<number>|Float32Array} vertexArray - Flat array of vertex positions [x0,y0,z0, x1,y1,z1, ...]
+ * @returns {Float32Array} - Flat array of normalized vectors [x0,y0,z0, x1,y1,z1, ...]
+ * @details
+ * - Computes unit normal vectors for each vertex by normalizing the vertex position vectors
+ * - Handles special case when vector length is 0 by returning [0,0,1]
+ * @example
+ * // const vertexArray = new Float32Array([0,0,1, 1,0,0, 0,1,0]);
+ * // const normals = generateSphereVertexNormals(vertexArray);
+ */
 function generateSphereVertexNormals(vertexArray) {
     let vertexNormals = [];
     const vertexPositions = vertexArray;
@@ -137,16 +191,28 @@ function generateSphereVertexNormals(vertexArray) {
 
 /**
  * @brief - Generate per-vertex colour data for a procedurally generated sphere
- * @details - Maps geometric information into RGBA colours using latitude/longitude banding on a sphere
- * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0,y0,z0, x1,y1,z1, ...]
- * @param {Object} [options]
- * @param {number} [options.latitudeBandCount = 64] - Number of latitude bands (φ direction)
- * @param {number} [options.longitudeBandCount = 64] - Number of longitude bands (θ direction)
- * @param {boolean} [options.useChecker = false] - If true, toogles a checkerboard accent
- * @param {number} [options.alpha = 1.0] - Alpha channel (0-1)
- * @returns {Float32Array} - Flat RGBA array per vertex
- * @throws {TypeError} - If vertexPositions is not divisible by 3
- * @example - const colours = generateSphereFaceColours(sphereVerts, {useChecker: true});
+ * @param {Array<number>|Float32Array} vertexPositions - Flat array of vertex positions [x0,y0,z0, x1,y1,z1, ...]
+ * @param {Object} [options] - Optional configuration object
+ * @param {number} [options.latitudeBandCount=64] - Number of latitude bands (φ direction)
+ * @param {number} [options.longitudeBandCount=64] - Number of longitude bands (θ direction)
+ * @param {boolean} [options.useChecker=false] - Enables checkerboard pattern when true
+ * @param {number} [options.alpha=1.0] - Opacity value for all vertices (0-1)
+ * @returns {Float32Array} - Flat array of RGBA colors [r0,g0,b0,a0, r1,g1,b1,a1, ...]
+ * @throws {TypeError} - If vertexPositions length is not divisible by 3
+ * @details
+ * - Color mapping strategy:
+ *     - Red channel varies with longitude (θ)
+ *     - Green channel varies with latitude (φ)
+ *     - Blue channel: inverse of green or checkerboard pattern
+ *     - Uses spherical coordinates for consistent banding
+ *     - Handles pole cases by clamping coordinates
+ * @example
+ * // const vertices = new Float32Array([0,0,1, 1,0,0, 0,1,0]);
+ * // const colors = generateSphereFaceColours(vertices, {
+ * //  latitudeBandCount: 32,
+ * //  useChecker: true,
+ * //  alpha: 0.8
+ * // });
  */
 function generateSphereFaceColours(vertexArray, options = {}) {
     let faceColours = [];
@@ -188,12 +254,23 @@ function generateSphereFaceColours(vertexArray, options = {}) {
 
 /**
  * @brief - Generates UV texture coordinates for sphere vertices
- * @param {Array<number>|Float32Array} vertexPositions - Flat array [x0,y0,z0, x1,y1,z1, ...]
- * @param {Object} [options]
+ * @param {Array<number>|Float32Array} vertexPositions - Flat array of vertex positions [x0,y0,z0, x1,y1,z1, ...]
+ * @param {Object} [options] - Optional configuration parameters
  * @param {number} [options.seamUOffset=0.0] - Rotates texture around Y-axis to position seam (0-1)
  * @param {number} [options.pinPolesUTo=0.5] - Fixed U coordinate for poles to avoid texture stretching (0-1)
  * @param {boolean} [options.flipV=false] - Inverts V coordinate for texture orientation
- * @returns {Float32Array} UV coordinates
+ * @returns {Float32Array} - Flat array of UV coordinates [u0,v0, u1,v1, ...]
+ * @throws {TypeError} - If vertexPositions is not divisible by 3
+ * @details
+ * - Computes spherical UV mapping for texture coordinates derived from azimuthal angle θ and polar angle φ
+ * - Handles pole singularities by pinning U coordinate
+ * - Supports texture seam rotation and V-flip for flexibility
+ * @example
+ * // const vertices = new Float32Array([0,0,1, 1,0,0, 0,1,0]);
+ * // const uvs = generateSphereTextureCoordinates(vertices, {
+ * //  seamUOffset: 0.25,
+ * //  flipV: true
+ * // });
  */
 function generateSphereTextureCoordinates(vertexArray, options = {}) {
     const {seamUOffset = 0.0, pinPolesUTo = 0.5, flipV = false} = options;
@@ -224,8 +301,8 @@ function generateSphereTextureCoordinates(vertexArray, options = {}) {
             textureU += 1.0;
         }
 
-        let textureV = phi / Math.PI;
         // Detection of singularities at the poles
+        let textureV = phi / Math.PI;
         const atPole = textureV < POLE_THRESHOLD || textureV > (1.0 - POLE_THRESHOLD);
 
         if(atPole) {
