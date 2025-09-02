@@ -67,3 +67,7 @@ runTests
 out/
 Debug/
 Release/
+
+# Virtual environments
+venv/
+env/
