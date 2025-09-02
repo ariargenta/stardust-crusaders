@@ -1,11 +1,6 @@
 /**
  * @brief - Creates a complete sphere mesh with consistent topology
  * @returns {Object} - Object containing all geometry arrays
- * @returns {Float32Array} positions - Vertex positions [x,y,z, ...]
- * @returns {Uint16Array} indices - Triangle indices [i0,i1,i2, ...]
- * @returns {Float32Array} normals - Vertex normals [nx,ny,nz, ...]
- * @returns {Float32Array} colours - Vertex colors [r,g,b,a, ...]
- * @returns {Float32Array} texture - UV coordinates [u,v, ...]
  */
 function generateGeometryData() {
     const radius = 640;
