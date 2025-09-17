@@ -50,7 +50,8 @@ vec3 simplexGrid(vec2 scaledCoords) {
 void main() {
     vec2 normalisedCoords = gl_FragCoord.xy / u_resolution.xy;
     vec3 outputColour = vec3(0.0);
-    vec2 scaledCoords = normalisedCoords * 10.0;
+    float scale = min(u_resolution.x, u_resolution.y) / 32.0;
+    vec2 scaledCoords = normalisedCoords * scale;
     vec2 originalGridFract = fract(scaledCoords);
 
     outputColour.rg = originalGridFract;
