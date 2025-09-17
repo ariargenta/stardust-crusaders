@@ -2,7 +2,11 @@
     precision mediump float;
 #endif
 
-#define PI 3.1415926535897932384626433
+#define PHI 1.6180339
+#define EULER 2.7182818
+#define PI 3.1415926
+#define FERMAT4 65537.0
+#define MERSENNE8 2147483647.0
 
 uniform vec2 u_resolution;
 uniform float u_time;
@@ -45,6 +49,20 @@ vec3 simplexGrid(vec2 scaledCoords) {
     vec3 normalisedVertices = fract(gridVertices);
 
     return normalisedVertices;
+}
+
+vec2 randomness(vec2 inputCoords) {
+    vec2 hash1 = vec2(PI / PHI, EULER * PHI);
+    vec2 hash2 = vec2(MERSENNE8 / FERMAT4, PI * EULER);
+    float dotProduct1 = dot(inputCoords, hash1);
+    float dotProduct2 = dot(inputCoords, hash2);
+    float sine1 = sin(dotProduct1);
+    float sine2 = sin(dotProduct2);
+    float chaos1 = sine1 * FERMAT4;
+    float chaos2 = sine2 * MERSENNE8;
+    vec2 randomValues = fract(vec2(chaos1, chaos2));
+
+    return randomValues;
 }
 
 void main() {
