@@ -14,33 +14,38 @@
 uniform vec2 u_resolution;
 uniform float u_time;
 
-vec2 random2( vec2 p ) {
-    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))))*43758.5453);
+vec2 random2(vec2 cellCoords) {
+    return fract(sin(vec2(dot(cellCoords,vec2(127.1,311.7)),dot(cellCoords, vec2(269.5,183.3)))) * 43758.5453);
 }
 
 void main() {
-    vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    st.x *= u_resolution.x/u_resolution.y;
-    vec3 color = vec3(.0);
+    vec2 screenCoords = gl_FragCoord.xy / u_resolution.xy;
 
-    st *= 5.;
+    screenCoords.x *= u_resolution.x / u_resolution.y;
 
-    vec2 i_st = floor(st);
-    vec2 f_st = fract(st);
+    vec3 outputColour = vec3(0.0);
+    vec2 scaledCoords = screenCoords * 16.0;
+    vec2 currentCellIndex = floor(scaledCoords);
+    vec2 positionInCell = fract(scaledCoords);
+    float closestDistance = 1.0;
 
-    float m_dist = 1.;
-    for (int j= -1; j <= 1; j++ ) {
-        for (int i= -1; i <= 1; i++ ) {
-            vec2 neighbor = vec2(float(i),float(j));
-            vec2 offset = random2(i_st + neighbor);
-            offset = 0.5 + 0.5*sin(u_time + 6.2831*offset);
-            vec2 pos = neighbor + offset - f_st;
+    for (int neighborY = -1; neighborY <= 1; ++neighborY) {
+        for (int neighborX = -1; neighborX <= 1; ++neighborX) {
+            vec2 neighbor = vec2(float(neighborY),float(neighborX));
+
+            vec2 neighborOffset = random2(currentCellIndex + neighbor);
+
+            neighborOffset = 0.5 + 0.5 * sin(u_time + 6.2831 * neighborOffset);
+
+            vec2 pos = neighbor + neighborOffset - positionInCell;
+
             float dist = length(pos);
-            m_dist = min(m_dist, m_dist*dist);
+
+            closestDistance = min(closestDistance, closestDistance * dist);
         }
     }
 
-    color += step(0.060, m_dist);
+    outputColour += step(0.05, closestDistance);
 
-    gl_FragColor = vec4(color,1.0);
+    gl_FragColor = vec4(outputColour,1.0);
 }
