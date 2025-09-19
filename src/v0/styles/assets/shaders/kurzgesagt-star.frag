@@ -2,11 +2,11 @@
     precision mediump float;
 #endif
 
+#define DELTA 0.0860713
 #define GAMMA 0.5772156
 #define PHI 1.6180339
 #define EULER 2.7182818
 #define PI 3.1415926
-#define DELTA 4.6692016
 #define TAU 6.2831853
 #define FERMAT4 65537.0
 #define MERSENNE8 2147483647.0
@@ -14,38 +14,49 @@
 uniform vec2 u_resolution;
 uniform float u_time;
 
-vec2 random2(vec2 cellCoords) {
-    return fract(sin(vec2(dot(cellCoords,vec2(127.1,311.7)),dot(cellCoords, vec2(269.5,183.3)))) * 43758.5453);
+vec2 random2(vec2 p) {
+    return fract(
+        sin(
+            vec2(
+                dot(p, vec2(pow(EULER, 5.0), pow(PI, 5.0)))
+                , dot(p, vec2(pow(TAU, 3.0), pow(PHI, 11.0)))
+            )
+        ) * (MERSENNE8 / FERMAT4)
+    );
 }
 
 void main() {
-    vec2 screenCoords = gl_FragCoord.xy / u_resolution.xy;
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
 
-    screenCoords.x *= u_resolution.x / u_resolution.y;
+    st.x *= u_resolution.x / u_resolution.y;
 
-    vec3 outputColour = vec3(0.0);
-    vec2 scaledCoords = screenCoords * 16.0;
-    vec2 currentCellIndex = floor(scaledCoords);
-    vec2 positionInCell = fract(scaledCoords);
-    float closestDistance = 1.0;
+    vec3 colour = vec3(.0);
 
-    for (int neighborY = -1; neighborY <= 1; ++neighborY) {
-        for (int neighborX = -1; neighborX <= 1; ++neighborX) {
-            vec2 neighbor = vec2(float(neighborY),float(neighborX));
+    st *= 16.0;
 
-            vec2 neighborOffset = random2(currentCellIndex + neighbor);
+    vec2 i_st = floor(st);
+    vec2 f_st = fract(st);
 
-            neighborOffset = 0.5 + 0.5 * sin(u_time + 6.2831 * neighborOffset);
+    float m_dist = 1.0;
 
-            vec2 pos = neighbor + neighborOffset - positionInCell;
+    for(int j = -1; j <= 1; ++j) {
+        for(int i = -1; i <= 1; ++i) {
+            vec2 nearest = vec2(
+                float(i), float(j)
+            );
 
+            vec2 offset = random2(i_st + nearest);
+
+            offset = GAMMA + GAMMA * sin(u_time + TAU * offset);
+
+            vec2 pos = nearest + offset - f_st;
             float dist = length(pos);
 
-            closestDistance = min(closestDistance, closestDistance * dist);
+            m_dist = min(m_dist, m_dist * dist);
         }
     }
 
-    outputColour += step(0.05, closestDistance);
+    colour += step(DELTA, m_dist);
 
-    gl_FragColor = vec4(outputColour,1.0);
+    gl_FragColor = vec4(colour,1.0);
 }
