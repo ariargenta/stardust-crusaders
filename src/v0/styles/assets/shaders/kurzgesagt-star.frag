@@ -31,22 +31,22 @@ vec3 stellarFlare(vec2 uvCoords, vec2 centre) {
     float fade = 1.0 - smoothstep(fadeStart, fadeEnd, radius1);
     float ringThickness = radius1 - radius2;
     float ringPos = (distance - radius2) / ringThickness;
-    vec3 hotColor = vec3(1.0, 0.0, 0.0);
-    vec3 warmColor = vec3(0.0, 1.0, 0.0);
-    vec3 coolColor = vec3(0.0, 0.0, 1.0);
-    vec3 ringColor = vec3(0.0);
+    vec3 hotContour = vec3(1.0, 1.0, 0.0);
+    vec3 warmContour = vec3(0.0, 1.0, 0.0);
+    vec3 coolContour = vec3(0.0, 1.0, 1.0);
+    vec3 ringContour = vec3(0.0);
 
     if (ringPos >= 0.0 && ringPos <= 1.0) {
         if (ringPos < 0.33) {
-            ringColor = mix(hotColor, warmColor, ringPos / 0.33);
+            ringContour = hotContour;
         } else if (ringPos < 0.66) {
-            ringColor = mix(warmColor, coolColor, (ringPos - 0.33) / 0.33);
+            ringContour = warmContour;
         } else {
-            ringColor = coolColor;
+            ringContour = coolContour;
         }
     }
 
-    flare = mix(flare, ringColor, ring * fade);
+    flare = mix(flare, ringContour, ring * fade);
 
     return flare;
 }
