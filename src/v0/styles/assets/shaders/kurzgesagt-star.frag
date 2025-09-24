@@ -8,28 +8,34 @@
 #define FERMAT4 65537.0
 #define MERSENNE8 2147483647.0
 
-precision highp float;
+precision mediump float;
 uniform vec2 u_resolution;
 uniform float u_time;
 out vec4 fragColour;
 
-void main() {
-    vec2 uvCoords = gl_FragCoord.xy / u_resolution;
+vec3 stellarFlare(vec2 uvCoords, vec2 centre) {
     vec3 colour = vec3(0.0);
-    vec2 centre = vec2(0.5, 0.5);
     float distance = distance(uvCoords, centre);
-    float speed1 = 0.125;
-    float speed2 = 0.15;
+    float speed1 = 0.15;
+    float speed2 = 0.18;
     float trigger = 0.125;
-    float cycleTime = mod(u_time, 8.0);
+    float cycleTime = mod(u_time, 7.0);
     float radius1 = 0.25 * (1.0 - exp(-cycleTime * speed1 * 4.0));
     float delayedTime = max(0.0, cycleTime - (trigger / speed1));
     float radius2 = 0.25 * (1.0 - exp(-delayedTime * speed2 * 4.0));
     float circle1 = step(distance, radius1);
     float circle2 = step(distance, radius2);
-    float ring1 = circle1 - circle2;
+    float ring = circle1 - circle2;
 
-    colour = mix(colour, vec3(1.0, 1.0, 1.0), ring1);
+    colour = mix(colour, vec3(1.0, 1.0, 1.0), ring);
+
+    return colour;
+}
+
+void main() {
+    vec2 uvCoords = gl_FragCoord.xy / u_resolution;
+    vec2 centre = vec2(0.5, 0.5);
+    vec3 colour = stellarFlare(uvCoords, centre);
 
     fragColour = vec4(colour, 1.0);
 }
