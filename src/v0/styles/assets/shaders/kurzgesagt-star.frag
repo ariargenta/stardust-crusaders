@@ -14,7 +14,7 @@ uniform float u_time;
 out vec4 fragColour;
 
 vec3 stellarFlare(vec2 uvCoords, vec2 centre) {
-    vec3 colour = vec3(0.0);
+    vec3 flare = vec3(0.0);
     float distance = distance(uvCoords, centre);
     float speed1 = 0.15;
     float speed2 = 0.18;
@@ -26,10 +26,13 @@ vec3 stellarFlare(vec2 uvCoords, vec2 centre) {
     float circle1 = step(distance, radius1);
     float circle2 = step(distance, radius2);
     float ring = circle1 - circle2;
+    float fadeStart = 0.15;
+    float fadeEnd = 0.25;
+    float fade = 1.0 - smoothstep(fadeStart, fadeEnd, radius1);
 
-    colour = mix(colour, vec3(1.0, 1.0, 1.0), ring);
+    flare = mix(flare, vec3(1.0, 1.0, 1.0), ring * fade);
 
-    return colour;
+    return flare;
 }
 
 void main() {
