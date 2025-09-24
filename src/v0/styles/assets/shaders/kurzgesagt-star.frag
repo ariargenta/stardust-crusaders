@@ -18,15 +18,18 @@ void main() {
     vec3 colour = vec3(0.0);
     vec2 centre = vec2(0.5, 0.5);
     float distance = distance(uvCoords, centre);
-    float speed1 = 0.5;
-    float speed2 = 0.25;
-    float radius1 = min(0.25, u_time * speed1);
-    float radius2 = min(0.25, u_time * speed2);
+    float speed1 = 0.25;
+    float speed2 = 0.125;
+    float trigger = 0.15;
+    float cycleTime = mod(u_time, 4.0);
+    float radius1 = min(0.25, cycleTime * speed1);
+    float delayedTime = max(0.0, cycleTime - (trigger / speed1));
+    float radius2 = min(0.25, delayedTime * speed2);
     float circle1 = step(distance, radius1);
     float circle2 = step(distance, radius2);
     float ring1 = circle1 - circle2;
 
-    colour = mix(colour, vec3(0.0, 1.0, 0.0), ring1);
+    colour = mix(colour, vec3(1.0, 1.0, 1.0), ring1);
 
     fragColour = vec4(colour, 1.0);
 }
