@@ -71,3 +71,7 @@ Release/
 # Virtual environments
 venv/
 env/
+
+# AI config files
+CLAUDE.md
+GPT.md
