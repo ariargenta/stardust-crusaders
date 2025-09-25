@@ -61,9 +61,11 @@ void main() {
     float gridSize = 0.1;
     vec2 grid = abs(fract(uvCoords / gridSize) - 0.5);
     float lineWidth = 0.02;
+
     if (grid.x < lineWidth || grid.y < lineWidth) {
         colour = vec3(0.1, 0.1, 0.1);
     }
+
     vec2 centre = vec2(0.5, 0.5);
     vec3 existingFlare = stellarFlare(uvCoords, centre);
 
@@ -72,22 +74,20 @@ void main() {
     const int MAX_FLARES = 4;
 
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
-        int seedX = flareIndex * int(FERMAT4);
-        int hashX = seedX * int(MERSENNE8);
+        int seedX = flareIndex * 73 + 17;
+        int seedY = flareIndex * 37 + 89;
 
-        hashX = hashX ^ (hashX >> 16);
-        hashX = hashX * int(MERSENNE8);
-        hashX = hashX ^ (hashX >> 16);
+        float flareX = fract(float(seedX) * 0.1031);
+        float flareY = fract(float(seedY) * 0.1543);
 
-        float flareX = float(hashX & BITWISE_MASK) / MERSENNE8;
-        int seedY = flareIndex * int(FERMAT4);
-        int hashY = seedY * int(MERSENNE8);
+        if (flareIndex == 0 && uvCoords.x < 0.1 && uvCoords.y > 0.9) {
+            colour = vec3(flareX, 0.0, 0.0);
+        }
 
-        hashY = hashY ^ (hashY >> 16);
-        hashY = hashY * int(MERSENNE8);
-        hashY = hashY ^ (hashY >> 16);
+        if (flareIndex == 1 && uvCoords.x < 0.1 && uvCoords.y > 0.8 && uvCoords.y < 0.9) {
+            colour = vec3(0.0, flareY, 0.0);
+        }
 
-        float flareY = float(hashY & BITWISE_MASK) / MERSENNE8;
         int seedTime = flareIndex * 127 + 42;
         int hashTime = seedTime * int(MERSENNE8);
 
@@ -97,6 +97,11 @@ void main() {
 
         float startTime = float(hashTime & BITWISE_MASK) / MERSENNE8 * TAU;
         float localTime = mod(u_time - startTime, TAU);
+        float debugDist = distance(uvCoords, vec2(flareX, flareY));
+
+        if (debugDist < 0.02) {
+            colour += vec3(1.0, 0.0, 1.0);
+        }
 
         if (localTime < 0.0 || localTime > 6.0) {
             continue;
