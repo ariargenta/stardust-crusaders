@@ -111,10 +111,35 @@ void main() {
     float unskew2 = (vertex2.x + vertex2.y) * unskewFactor;
     vec2 euclidean2 = vertex2 - vec2(unskew2, unskew2);
     vec2 distance2 = cellFraction - euclidean2;
-    float debugDist = length(distance0) + length(distance1) + length(distance2);
-    vec3 debugUnskew = vec3(debugDist * 0.5, 0.2, 0.8);
 
-    colour += debugUnskew * 0.3;
+    vec2[12] gradients = vec2[12](
+        vec2(1,1), vec2(-1,1), vec2(1,-1), vec2(-1,-1),
+        vec2(1,0), vec2(-1,0), vec2(0,1), vec2(0,-1),
+        vec2(1,1), vec2(-1,1), vec2(1,-1), vec2(-1,-1)
+    );
+
+    int hash0 = int(mod(cellOrigin.x + cellOrigin.y * 57.0, 12.0));
+    int hash1 = int(mod(cellOrigin.x + vertex1.x + (cellOrigin.y + vertex1.y) * 57.0, 12.0));
+    int hash2 = int(mod(cellOrigin.x + vertex2.x + (cellOrigin.y + vertex2.y) * 57.0, 12.0));
+    vec2 grad0 = gradients[hash0];
+    vec2 grad1 = gradients[hash1];
+    vec2 grad2 = gradients[hash2];
+    float falloff0 = max(0.0, 0.5 - dot(distance0, distance0));
+    float contribution0 = falloff0 * falloff0 * falloff0 * falloff0 * dot(grad0, distance0);
+    float falloff1 = max(0.0, 0.5 - dot(distance1, distance1));
+    float contribution1 = falloff1 * falloff1 * falloff1 * falloff1 * dot(grad1, distance1);
+    float falloff2 = max(0.0, 0.5 - dot(distance2, distance2));
+    float contribution2 = falloff2 * falloff2 * falloff2 * falloff2 * dot(grad2, distance2);
+    float totalNoise = 70.0 * (contribution0 + contribution1 + contribution2);
+    float normalizedNoise = (totalNoise + 1.0) * 0.5;
+    float flareThreshold = 0.6;
+    float noiseInfluence = smoothstep(flareThreshold, 1.0, normalizedNoise);
+
+    if (noiseInfluence > 0.1) {
+        vec3 debugNoise = vec3(0.2, 0.2, noiseInfluence * 0.5);
+
+        colour += debugNoise;
+    }
 
     vec2 centre = vec2(0.5, 0.5);
     float centralTime = mod(u_time, 6.0);
@@ -128,15 +153,24 @@ void main() {
         vec2 flarePosition = getFlarePosition(flareIndex);
         float startTime = getFlareStartTime(flareIndex);
         float localTime = mod(u_time - startTime, TAU);
-        float debugDist = distance(uvCoords, flarePosition);
 
         if (localTime < 0.0 || localTime > 6.0) {
             continue;
         }
 
-        vec3 flareContribution = renderFlare(uvCoords, flarePosition, localTime);
+        vec2 flareCoord = flarePosition * noiseScale + vec2(timeOffset, 0.0);
+        float flareSkewFactor = 0.5 * (sqrt(3.0) - 1.0);
+        float flareSkewed = (flareCoord.x + flareCoord.y) * flareSkewFactor;
+        vec2 flareSkewedCoord = flareCoord + vec2(flareSkewed, flareSkewed);
+        vec2 flareCell = floor(flareSkewedCoord);
+        float flareHash = mod(flareCell.x + flareCell.y * 57.0, 12.0) / 12.0;
+        float flareNoiseInfluence = smoothstep(0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3);
 
-        colour += flareContribution;
+        if (flareNoiseInfluence > 0.4) {
+            vec3 flareContribution = renderFlare(uvCoords, flarePosition, localTime);
+
+            colour += flareContribution * flareNoiseInfluence;
+        }
     }
 
     fragColour = vec4(colour, 1.0);
