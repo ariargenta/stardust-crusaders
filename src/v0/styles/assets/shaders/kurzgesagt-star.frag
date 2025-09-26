@@ -25,93 +25,12 @@ float hash(int seed) {
     return fract(float(seed) * 0.1031);
 }
 
-vec2 getFlarePosition(int flareID) {
-    int seedX = flareID * 73 + 17;
-    int seedY = flareID * 37 + 89;
-    float x = fract(float(seedX) * 0.1031);
-    float y = fract(float(seedY) * 0.1543);
-    return vec2(x, y);
+float hash2D(vec2 coord) {
+    return mod(coord.x + coord.y * 57.0, 12.0);
 }
 
-float getFlareStartTime(int flareID) {
-    int seedTime = flareID * 127 + 42;
-    return hash(seedTime) * TAU;
-}
-
-vec3 renderFlare(vec2 uvCoords, vec2 flareCenter, float localTime) {
-    vec3 flare = vec3(0.0);
-    float distToFlare = distance(uvCoords, flareCenter);
-    float speed1 = 0.15;
-    float speed2 = 0.18;
-    float trigger = 0.125;
-    float radius1 = 0.25 * (1.0 - exp(-localTime * speed1 * 4.0));
-    float delayedTime = max(0.0, localTime - (trigger / speed1));
-    float radius2 = 0.25 * (1.0 - exp(-delayedTime * speed2 * 4.0));
-
-    if (distToFlare <= radius1 && distToFlare > radius2) {
-        float ringThickness = radius1 - radius2;
-        float ringPosition = (distToFlare - radius2) / ringThickness;
-        vec3 hotContour = vec3(1.0, 1.0, 0.0);
-        vec3 warmContour = vec3(0.0, 1.0, 0.0);
-        vec3 coolContour = vec3(0.0, 1.0, 1.0);
-        vec3 flareColor = vec3(0.0);
-
-        if (ringPosition < 0.33) {
-            flareColor = hotContour;
-        }
-        else if (ringPosition < 0.66) {
-            flareColor = warmContour;
-        }
-        else {
-            flareColor = coolContour;
-        }
-
-        float fadeStart = 0.15;
-        float fadeEnd = 0.25;
-        float fade = 1.0 - smoothstep(fadeStart, fadeEnd, radius1);
-
-        flare = flareColor * fade;
-    }
-
-    return flare;
-}
-
-void main() {
-    vec2 uvCoords = vTextureCoord;
-    vec3 colour = vec3(0.0, 0.0, 0.0);
-
-    float noiseScale = 2.0;
-    float timeOffset = u_time * 0.1;
-    vec2 coord = uvCoords * noiseScale + vec2(timeOffset, 0.0);
-    float skewFactor = 0.5 * (sqrt(3.0) - 1.0);
-    float skewed = (coord.x + coord.y) * skewFactor;
-    vec2 skewedCoord = coord + vec2(skewed, skewed);
-    vec2 cellOrigin = floor(skewedCoord);
-    vec2 cellFraction = fract(skewedCoord);
-    vec2 vertex1, vertex2;
-
-    if (cellFraction.x > cellFraction.y) {
-        vertex1 = vec2(1.0, 0.0);
-    }
-    else {
-        vertex1 = vec2(0.0, 1.0);
-    }
-
-    vertex2 = vec2(1.0, 1.0);
-
-    float unskewFactor = (3.0 - sqrt(3.0)) / 6.0;
-    vec2 vertex0 = vec2(0.0, 0.0);
-    float unskew0 = (cellOrigin.x + vertex0.x + cellOrigin.y + vertex0.y) * unskewFactor;
-    vec2 euclidean0 = cellOrigin + vertex0 - vec2(unskew0, unskew0);
-    vec2 distance0 = coord - euclidean0;
-    float unskew1 = (cellOrigin.x + vertex1.x + cellOrigin.y + vertex1.y) * unskewFactor;
-    vec2 euclidean1 = cellOrigin + vertex1 - vec2(unskew1, unskew1);
-    vec2 distance1 = coord - euclidean1;
-    float unskew2 = (cellOrigin.x + vertex2.x + cellOrigin.y + vertex2.y) * unskewFactor;
-    vec2 euclidean2 = cellOrigin + vertex2 - vec2(unskew2, unskew2);
-    vec2 distance2 = coord - euclidean2;
-
-    vec2[12] gradients = vec2[12](
+vec2[12] getNoiseGradients() {
+    return vec2[12](
         vec2(1,1)
         , vec2(-1,1)
         , vec2(1,-1)
@@ -125,10 +44,31 @@ void main() {
         , vec2(1,-1)
         , vec2(-1,-1)
     );
+}
 
-    int hash0 = int(mod(cellOrigin.x + cellOrigin.y * 57.0, 12.0));
-    int hash1 = int(mod(cellOrigin.x + vertex1.x + (cellOrigin.y + vertex1.y) * 57.0, 12.0));
-    int hash2 = int(mod(cellOrigin.x + vertex2.x + (cellOrigin.y + vertex2.y) * 57.0, 12.0));
+float generateSimplexNoise(vec2 coord) {
+    float skewFactor = 0.5 * (sqrt(3.0) - 1.0);
+    float skewed = (coord.x + coord.y) * skewFactor;
+    vec2 skewedCoord = coord + vec2(skewed);
+    vec2 cellOrigin = floor(skewedCoord);
+    vec2 cellFraction = fract(skewedCoord);
+    vec2 vertex1 = (cellFraction.x > cellFraction.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec2 vertex2 = vec2(1.0, 1.0);
+    float unskewFactor = (3.0 - sqrt(3.0)) / 6.0;
+    vec2 vertex0 = vec2(0.0, 0.0);
+    float unskew0 = (cellOrigin.x + vertex0.x + cellOrigin.y + vertex0.y) * unskewFactor;
+    vec2 euclidean0 = cellOrigin + vertex0 - vec2(unskew0);
+    vec2 distance0 = coord - euclidean0;
+    float unskew1 = (cellOrigin.x + vertex1.x + cellOrigin.y + vertex1.y) * unskewFactor;
+    vec2 euclidean1 = cellOrigin + vertex1 - vec2(unskew1);
+    vec2 distance1 = coord - euclidean1;
+    float unskew2 = (cellOrigin.x + vertex2.x + cellOrigin.y + vertex2.y) * unskewFactor;
+    vec2 euclidean2 = cellOrigin + vertex2 - vec2(unskew2);
+    vec2 distance2 = coord - euclidean2;
+    vec2[12] gradients = getNoiseGradients();
+    int hash0 = int(hash2D(cellOrigin + vertex0));
+    int hash1 = int(hash2D(cellOrigin + vertex1));
+    int hash2 = int(hash2D(cellOrigin + vertex2));
     vec2 grad0 = gradients[hash0];
     vec2 grad1 = gradients[hash1];
     vec2 grad2 = gradients[hash2];
@@ -139,32 +79,106 @@ void main() {
     float falloff2 = max(0.0, 0.5 - dot(distance2, distance2));
     float contribution2 = falloff2 * falloff2 * falloff2 * falloff2 * dot(grad2, distance2);
     float totalNoise = 70.0 * (contribution0 + contribution1 + contribution2);
-    float normalizedNoise = (totalNoise + 1.0) * 0.5;
+
+    return (totalNoise + 1.0) * 0.5;
+}
+
+vec3 visualizeNoise(float normalizedNoise) {
     float flareThreshold = 0.6;
-    float noiseInfluence = smoothstep(flareThreshold, 1.0, normalizedNoise);
-    vec3 noiseViz = vec3(0.0, 0.0, 0.0);
 
     if (normalizedNoise <= 0.4) {
-        noiseViz = vec3(0.0, 0.0, normalizedNoise / 0.4);
+        return vec3(0.0, 0.0, normalizedNoise / 0.4);
     }
     else if (normalizedNoise <= flareThreshold) {
         float t = (normalizedNoise - 0.4) / (flareThreshold - 0.4);
-        noiseViz = vec3(t, 0.0, 1.0 - t);
+
+        return vec3(t, 0.0, 1.0 - t);
     }
     else {
         float intensity = (normalizedNoise - flareThreshold) / (1.0 - flareThreshold);
-        noiseViz = vec3(1.0, intensity, 1.0);
+
+        return vec3(1.0, intensity, 1.0);
+    }
+}
+
+vec2 getFlarePosition(int flareID) {
+    int seedX = flareID * 73 + 17;
+    int seedY = flareID * 37 + 89;
+    float x = fract(float(seedX) * 0.1031);
+    float y = fract(float(seedY) * 0.1543);
+
+    return vec2(x, y);
+}
+
+float getFlareStartTime(int flareID) {
+    int seedTime = flareID * 127 + 42;
+
+    return hash(seedTime) * TAU;
+}
+
+struct FlareParams {
+    float speed1;
+    float speed2;
+    float trigger;
+    float maxRadius1;
+    float maxRadius2;
+    float fadeStart;
+    float fadeEnd;
+};
+
+vec3 getFlareColor(float ringPosition) {
+    vec3 hotContour = vec3(1.0, 1.0, 0.0);
+    vec3 warmContour = vec3(0.0, 1.0, 0.0);
+    vec3 coolContour = vec3(0.0, 1.0, 1.0);
+
+    if (ringPosition < 0.33) {
+        return hotContour;
+    }
+    else if (ringPosition < 0.66) {
+        return warmContour;
+    }
+    else {
+        return coolContour;
+    }
+}
+
+vec3 renderFlare(vec2 uvCoords, vec2 flareCenter, float localTime) {
+    FlareParams params = FlareParams(
+        0.075, 0.08, 0.075, 0.1, 0.25, 0.15, 0.25
+    );
+
+    float distToFlare = distance(uvCoords, flareCenter);
+    float radius1 = params.maxRadius1 * (1.0 - exp(-localTime * params.speed1 * 4.0));
+    float delayedTime = max(0.0, localTime - (params.trigger / params.speed1));
+    float radius2 = params.maxRadius2 * (1.0 - exp(-delayedTime * params.speed2 * 4.0));
+
+    if (distToFlare <= radius1 && distToFlare > radius2) {
+        float ringThickness = radius1 - radius2;
+        float ringPosition = (distToFlare - radius2) / ringThickness;
+        vec3 flareColor = getFlareColor(ringPosition);
+        float fade = 1.0 - smoothstep(params.fadeStart, params.fadeEnd, radius1);
+
+        return flareColor * fade;
     }
 
-    colour += noiseViz * 0.3;
+    return vec3(0.0);
+}
 
-    vec2 centre = vec2(0.5, 0.5);
-    float centralTime = mod(u_time, 6.0);
-    vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
+float calculateFlareInfluence(vec2 flarePosition, float noiseScale, float timeOffset) {
+    vec2 flareCoord = flarePosition * noiseScale + vec2(timeOffset, 0.0);
+    float flareSkewFactor = 0.5 * (sqrt(3.0) - 1.0);
+    float flareSkewed = (flareCoord.x + flareCoord.y) * flareSkewFactor;
+    vec2 flareSkewedCoord = flareCoord + vec2(flareSkewed);
+    vec2 flareCell = floor(flareSkewedCoord);
+    float flareHash = hash2D(flareCell) / 12.0;
 
-    colour += centralFlare;
+    return smoothstep(0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3);
+}
 
-    const int MAX_FLARES = 7;
+vec3 renderAllFlares(vec2 uvCoords, float noiseScale, float timeOffset) {
+    vec3 totalFlares = vec3(0.0);
+
+    const int MAX_FLARES = 64;
 
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
         vec2 flarePosition = getFlarePosition(flareIndex);
@@ -175,15 +189,8 @@ void main() {
             continue;
         }
 
-        vec2 flareCoord = flarePosition * noiseScale + vec2(timeOffset, 0.0);
-        float flareSkewFactor = 0.5 * (sqrt(3.0) - 1.0);
-        float flareSkewed = (flareCoord.x + flareCoord.y) * flareSkewFactor;
-        vec2 flareSkewedCoord = flareCoord + vec2(flareSkewed, flareSkewed);
-        vec2 flareCell = floor(flareSkewedCoord);
-        float flareHash = mod(flareCell.x + flareCell.y * 57.0, 12.0) / 12.0;
-
-        float flareNoiseInfluence = smoothstep(
-            0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3
+        float flareNoiseInfluence = calculateFlareInfluence(
+            flarePosition, noiseScale, timeOffset
         );
 
         if (flareNoiseInfluence > 0.4) {
@@ -191,9 +198,39 @@ void main() {
                 uvCoords, flarePosition, localTime
             );
 
-            colour += flareContribution * flareNoiseInfluence;
+            totalFlares += flareContribution * flareNoiseInfluence;
         }
     }
 
-    fragColour = vec4(colour, 1.0);
+    return totalFlares;
+}
+
+vec3 composeKurzgesagtEffect(vec2 uvCoords) {
+    vec3 colour = vec3(0.0, 0.0, 0.0);
+    float noiseScale = 2.0;
+    float timeOffset = u_time * 0.1;
+    vec2 coord = uvCoords * noiseScale + vec2(timeOffset, 0.0);
+    float normalizedNoise = generateSimplexNoise(coord);
+    vec3 noiseViz = visualizeNoise(normalizedNoise);
+    colour += noiseViz * 0.3;
+    vec2 centre = vec2(0.5, 0.5);
+    float centralTime = mod(u_time, 6.0);
+    vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
+
+    colour += centralFlare;
+
+    vec3 distributedFlares = renderAllFlares(
+        uvCoords, noiseScale, timeOffset
+    );
+
+    colour += distributedFlares;
+
+    return colour;
+}
+
+void main() {
+    vec2 uvCoords = vTextureCoord;
+    vec3 finalColor = composeKurzgesagtEffect(uvCoords);
+
+    fragColour = vec4(finalColor, 1.0);
 }
