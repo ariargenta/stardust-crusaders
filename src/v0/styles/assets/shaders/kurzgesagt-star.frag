@@ -100,16 +100,21 @@ void main() {
 
     vertex2 = vec2(1.0, 1.0);
 
-    vec3 debugTriangle;
+    float unskewFactor = (3.0 - sqrt(3.0)) / 6.0;
+    vec2 vertex0 = vec2(0.0, 0.0);
+    float unskew0 = (vertex0.x + vertex0.y) * unskewFactor;
+    vec2 euclidean0 = vertex0 - vec2(unskew0, unskew0);
+    vec2 distance0 = cellFraction - euclidean0;
+    float unskew1 = (vertex1.x + vertex1.y) * unskewFactor;
+    vec2 euclidean1 = vertex1 - vec2(unskew1, unskew1);
+    vec2 distance1 = cellFraction - euclidean1;
+    float unskew2 = (vertex2.x + vertex2.y) * unskewFactor;
+    vec2 euclidean2 = vertex2 - vec2(unskew2, unskew2);
+    vec2 distance2 = cellFraction - euclidean2;
+    float debugDist = length(distance0) + length(distance1) + length(distance2);
+    vec3 debugUnskew = vec3(debugDist * 0.5, 0.2, 0.8);
 
-    if (cellFraction.x > cellFraction.y) {
-        debugTriangle = vec3(1.0, 0.0, 0.0);
-    }
-    else {
-        debugTriangle = vec3(0.0, 0.0, 1.0);
-    }
-
-    colour += debugTriangle * 0.3;
+    colour += debugUnskew * 0.3;
 
     vec2 centre = vec2(0.5, 0.5);
     float centralTime = mod(u_time, 6.0);
