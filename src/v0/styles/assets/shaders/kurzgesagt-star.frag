@@ -81,6 +81,17 @@ void main() {
         colour = vec3(0.1, 0.1, 0.1);
     }
 
+    float noiseScale = 2.0;
+    float timeOffset = u_time * 0.1;
+    vec2 coord = uvCoords * noiseScale + vec2(timeOffset, 0.0);
+
+    float F2 = 0.5 * (sqrt(3.0) - 1.0);
+    float s = (coord.x + coord.y) * F2;
+    vec2 skewedCoord = coord + vec2(s, s);
+
+    vec3 debugSkew = vec3(fract(skewedCoord.x), fract(skewedCoord.y), 0.5);
+    colour += debugSkew * 0.3;
+
     vec2 centre = vec2(0.5, 0.5);
     float centralTime = mod(u_time, 6.0);
     vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
@@ -94,10 +105,6 @@ void main() {
         float startTime = getFlareStartTime(flareIndex);
         float localTime = mod(u_time - startTime, TAU);
         float debugDist = distance(uvCoords, flarePosition);
-
-        if (debugDist < 0.02) {
-            colour += vec3(1.0, 0.0, 1.0);
-        }
 
         if (localTime < 0.0 || localTime > 6.0) {
             continue;
