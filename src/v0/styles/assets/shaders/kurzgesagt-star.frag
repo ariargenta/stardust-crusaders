@@ -84,13 +84,32 @@ void main() {
     float noiseScale = 2.0;
     float timeOffset = u_time * 0.1;
     vec2 coord = uvCoords * noiseScale + vec2(timeOffset, 0.0);
+    float skewFactor = 0.5 * (sqrt(3.0) - 1.0);
+    float skewed = (coord.x + coord.y) * skewFactor;
+    vec2 skewedCoord = coord + vec2(skewed, skewed);
+    vec2 cellOrigin = floor(skewedCoord);
+    vec2 cellFraction = fract(skewedCoord);
+    vec2 vertex1, vertex2;
 
-    float F2 = 0.5 * (sqrt(3.0) - 1.0);
-    float s = (coord.x + coord.y) * F2;
-    vec2 skewedCoord = coord + vec2(s, s);
+    if (cellFraction.x > cellFraction.y) {
+        vertex1 = vec2(1.0, 0.0);
+    }
+    else {
+        vertex1 = vec2(0.0, 1.0);
+    }
 
-    vec3 debugSkew = vec3(fract(skewedCoord.x), fract(skewedCoord.y), 0.5);
-    colour += debugSkew * 0.3;
+    vertex2 = vec2(1.0, 1.0);
+
+    vec3 debugTriangle;
+
+    if (cellFraction.x > cellFraction.y) {
+        debugTriangle = vec3(1.0, 0.0, 0.0);
+    }
+    else {
+        debugTriangle = vec3(0.0, 0.0, 1.0);
+    }
+
+    colour += debugTriangle * 0.3;
 
     vec2 centre = vec2(0.5, 0.5);
     float centralTime = mod(u_time, 6.0);
