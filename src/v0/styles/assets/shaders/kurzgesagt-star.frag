@@ -102,15 +102,15 @@ void main() {
 
     float unskewFactor = (3.0 - sqrt(3.0)) / 6.0;
     vec2 vertex0 = vec2(0.0, 0.0);
-    float unskew0 = (vertex0.x + vertex0.y) * unskewFactor;
-    vec2 euclidean0 = vertex0 - vec2(unskew0, unskew0);
-    vec2 distance0 = cellFraction - euclidean0;
-    float unskew1 = (vertex1.x + vertex1.y) * unskewFactor;
-    vec2 euclidean1 = vertex1 - vec2(unskew1, unskew1);
-    vec2 distance1 = cellFraction - euclidean1;
-    float unskew2 = (vertex2.x + vertex2.y) * unskewFactor;
-    vec2 euclidean2 = vertex2 - vec2(unskew2, unskew2);
-    vec2 distance2 = cellFraction - euclidean2;
+    float unskew0 = (cellOrigin.x + vertex0.x + cellOrigin.y + vertex0.y) * unskewFactor;
+    vec2 euclidean0 = cellOrigin + vertex0 - vec2(unskew0, unskew0);
+    vec2 distance0 = coord - euclidean0;
+    float unskew1 = (cellOrigin.x + vertex1.x + cellOrigin.y + vertex1.y) * unskewFactor;
+    vec2 euclidean1 = cellOrigin + vertex1 - vec2(unskew1, unskew1);
+    vec2 distance1 = coord - euclidean1;
+    float unskew2 = (cellOrigin.x + vertex2.x + cellOrigin.y + vertex2.y) * unskewFactor;
+    vec2 euclidean2 = cellOrigin + vertex2 - vec2(unskew2, unskew2);
+    vec2 distance2 = coord - euclidean2;
 
     vec2[12] gradients = vec2[12](
         vec2(1,1), vec2(-1,1), vec2(1,-1), vec2(-1,-1),
@@ -135,20 +135,23 @@ void main() {
     float flareThreshold = 0.6;
     float noiseInfluence = smoothstep(flareThreshold, 1.0, normalizedNoise);
 
-    if (noiseInfluence > 0.1) {
-        vec3 debugNoise = vec3(0.2, 0.2, noiseInfluence * 0.5);
+    vec3 noiseViz = vec3(normalizedNoise, normalizedNoise, normalizedNoise * 0.5);
 
-        colour += debugNoise;
+    if (normalizedNoise > flareThreshold) {
+        noiseViz.r = 1.0;
+        noiseViz.g = 1.0;
+        noiseViz.b = 1.0;
     }
 
-    vec2 centre = vec2(0.5, 0.5);
-    float centralTime = mod(u_time, 6.0);
-    vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
-
-    colour += centralFlare;
+    colour = noiseViz;
+    // vec2 centre = vec2(0.5, 0.5);
+    // float centralTime = mod(u_time, 6.0);
+    // vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
+    // colour += centralFlare;
 
     const int MAX_FLARES = 4;
 
+    /*
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
         vec2 flarePosition = getFlarePosition(flareIndex);
         float startTime = getFlareStartTime(flareIndex);
@@ -168,10 +171,10 @@ void main() {
 
         if (flareNoiseInfluence > 0.4) {
             vec3 flareContribution = renderFlare(uvCoords, flarePosition, localTime);
-
             colour += flareContribution * flareNoiseInfluence;
         }
     }
+    */
 
     fragColour = vec4(colour, 1.0);
 }
