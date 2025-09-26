@@ -134,24 +134,28 @@ void main() {
     float normalizedNoise = (totalNoise + 1.0) * 0.5;
     float flareThreshold = 0.6;
     float noiseInfluence = smoothstep(flareThreshold, 1.0, normalizedNoise);
-
-    vec3 noiseViz = vec3(normalizedNoise, normalizedNoise, normalizedNoise * 0.5);
-
-    if (normalizedNoise > flareThreshold) {
-        noiseViz.r = 1.0;
-        noiseViz.g = 1.0;
-        noiseViz.b = 1.0;
+    vec3 noiseViz = vec3(0.0, 0.0, 0.0);
+    if (normalizedNoise <= 0.4) {
+        noiseViz = vec3(0.0, 0.0, normalizedNoise / 0.4);
+    }
+    else if (normalizedNoise <= flareThreshold) {
+        float t = (normalizedNoise - 0.4) / (flareThreshold - 0.4);
+        noiseViz = vec3(t, 0.0, 1.0 - t);
+    }
+    else {
+        float intensity = (normalizedNoise - flareThreshold) / (1.0 - flareThreshold);
+        noiseViz = vec3(1.0, intensity, 1.0);
     }
 
-    colour = noiseViz;
-    // vec2 centre = vec2(0.5, 0.5);
-    // float centralTime = mod(u_time, 6.0);
-    // vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
-    // colour += centralFlare;
+    colour = noiseViz * 0.3;
+
+    vec2 centre = vec2(0.5, 0.5);
+    float centralTime = mod(u_time, 6.0);
+    vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
+    colour += centralFlare;
 
     const int MAX_FLARES = 4;
 
-    /*
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
         vec2 flarePosition = getFlarePosition(flareIndex);
         float startTime = getFlareStartTime(flareIndex);
@@ -174,7 +178,6 @@ void main() {
             colour += flareContribution * flareNoiseInfluence;
         }
     }
-    */
 
     fragColour = vec4(colour, 1.0);
 }
