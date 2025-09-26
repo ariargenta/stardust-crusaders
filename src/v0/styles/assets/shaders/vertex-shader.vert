@@ -1,27 +1,20 @@
-attribute vec4 aVertexPosition;
-attribute vec3 aVertexNormal;
-attribute vec2 aTextureCoord;
-uniform mat4 uNormalMatrix;
-uniform mat4 uModelViewMatrix;
-uniform mat4 uProjectionMatrix;
+#version 300 es
 
-varying highp vec2 vTextureCoord;
-varying highp vec3 vLighting;
+in vec4 aVertexPosition;
+in vec3 aVertexNormal;
+in vec2 aTextureCoord;
+
+uniform mat4 uProjectionMatrix;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uNormalMatrix;
+
+out vec2 vTextureCoord;
+out vec3 vWorldPosition;
+out vec3 vNormal;
 
 void main(void) {
     gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
     vTextureCoord = aTextureCoord;
-    highp vec3 ambientLight = vec3(0.5, 0.5, 0.5);
-    highp vec3 directionalLightColor = vec3(1, 1, 1);
-    highp vec3 directionalVector = normalize(vec3(0.75, 0.75, 0.75));
-    highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
-
-    highp float directional = max(dot(
-            transformedNormal.xyz
-            , directionalVector
-        )
-        , 0.0
-    );
-
-    vLighting = ambientLight + (directionalLightColor * directional);
+    vWorldPosition = (uModelViewMatrix * aVertexPosition).xyz;
+    vNormal = (uNormalMatrix * vec4(aVertexNormal, 0.0)).xyz;
 }

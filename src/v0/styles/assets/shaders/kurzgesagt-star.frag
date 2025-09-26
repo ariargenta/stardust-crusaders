@@ -13,6 +13,12 @@
 precision mediump float;
 uniform vec2 u_resolution;
 uniform float u_time;
+uniform sampler2D uSampler;
+
+in vec2 vTextureCoord;
+in vec3 vWorldPosition;
+in vec3 vNormal;
+
 out vec4 fragColour;
 
 float hash(int seed) {
@@ -71,15 +77,8 @@ vec3 renderFlare(vec2 uvCoords, vec2 flareCenter, float localTime) {
 }
 
 void main() {
-    vec2 uvCoords = gl_FragCoord.xy / u_resolution;
+    vec2 uvCoords = vTextureCoord;
     vec3 colour = vec3(0.0, 0.0, 0.0);
-    float gridSize = 0.1;
-    vec2 grid = abs(fract(uvCoords / gridSize) - 0.5);
-    float lineWidth = 0.02;
-
-    if (grid.x < lineWidth || grid.y < lineWidth) {
-        colour = vec3(0.1, 0.1, 0.1);
-    }
 
     float noiseScale = 2.0;
     float timeOffset = u_time * 0.1;
@@ -113,9 +112,18 @@ void main() {
     vec2 distance2 = coord - euclidean2;
 
     vec2[12] gradients = vec2[12](
-        vec2(1,1), vec2(-1,1), vec2(1,-1), vec2(-1,-1),
-        vec2(1,0), vec2(-1,0), vec2(0,1), vec2(0,-1),
-        vec2(1,1), vec2(-1,1), vec2(1,-1), vec2(-1,-1)
+        vec2(1,1)
+        , vec2(-1,1)
+        , vec2(1,-1)
+        , vec2(-1,-1)
+        , vec2(1,0)
+        , vec2(-1,0)
+        , vec2(0,1)
+        , vec2(0,-1)
+        , vec2(1,1)
+        , vec2(-1,1)
+        , vec2(1,-1)
+        , vec2(-1,-1)
     );
 
     int hash0 = int(mod(cellOrigin.x + cellOrigin.y * 57.0, 12.0));
@@ -135,6 +143,7 @@ void main() {
     float flareThreshold = 0.6;
     float noiseInfluence = smoothstep(flareThreshold, 1.0, normalizedNoise);
     vec3 noiseViz = vec3(0.0, 0.0, 0.0);
+
     if (normalizedNoise <= 0.4) {
         noiseViz = vec3(0.0, 0.0, normalizedNoise / 0.4);
     }
@@ -147,14 +156,15 @@ void main() {
         noiseViz = vec3(1.0, intensity, 1.0);
     }
 
-    colour = noiseViz * 0.3;
+    colour += noiseViz * 0.3;
 
     vec2 centre = vec2(0.5, 0.5);
     float centralTime = mod(u_time, 6.0);
     vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
+
     colour += centralFlare;
 
-    const int MAX_FLARES = 4;
+    const int MAX_FLARES = 7;
 
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
         vec2 flarePosition = getFlarePosition(flareIndex);
@@ -171,10 +181,16 @@ void main() {
         vec2 flareSkewedCoord = flareCoord + vec2(flareSkewed, flareSkewed);
         vec2 flareCell = floor(flareSkewedCoord);
         float flareHash = mod(flareCell.x + flareCell.y * 57.0, 12.0) / 12.0;
-        float flareNoiseInfluence = smoothstep(0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3);
+
+        float flareNoiseInfluence = smoothstep(
+            0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3
+        );
 
         if (flareNoiseInfluence > 0.4) {
-            vec3 flareContribution = renderFlare(uvCoords, flarePosition, localTime);
+            vec3 flareContribution = renderFlare(
+                uvCoords, flarePosition, localTime
+            );
+
             colour += flareContribution * flareNoiseInfluence;
         }
     }

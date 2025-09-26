@@ -72,6 +72,17 @@ function drawScene(
 
     gl.useProgram(programInfo.program);
 
+    gl.uniform2f(
+        programInfo.uniformLocations.resolution,
+        gl.canvas.width,
+        gl.canvas.height
+    );
+
+    gl.uniform1f(
+        programInfo.uniformLocations.time,
+        cartesianRotation
+    );
+
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,

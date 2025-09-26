@@ -42,7 +42,7 @@ async function main() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     const vertexShaderURI = "./styles/assets/shaders/vertex-shader.vert";
-    const fragmentShaderURI = "./styles/assets/shaders/fragment-shader.frag";
+    const fragmentShaderURI = "./styles/assets/shaders/kurzgesagt-star.frag";
 
     const [vertexShaderSource, fragmentShaderSource] = await Promise.all([
         fetch(vertexShaderURI)
@@ -68,6 +68,8 @@ async function main() {
             projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
             normalMatrix: gl.getUniformLocation(shaderProgram, "uNormalMatrix"),
+            resolution: gl.getUniformLocation(shaderProgram, "u_resolution"),
+            time: gl.getUniformLocation(shaderProgram, "u_time"),
             uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),
         },
     };
