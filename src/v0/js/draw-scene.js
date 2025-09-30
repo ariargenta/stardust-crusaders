@@ -85,7 +85,7 @@ function drawScene(
 
     gl.uniform1f(
         programInfo.uniformLocations.sphereToCartesian,
-        0.0
+        1.0
     );
 
     gl.uniformMatrix4fv(
