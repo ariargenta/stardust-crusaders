@@ -212,7 +212,9 @@ vec3 composeKurzgesagtEffect(vec2 uvCoords) {
     vec2 coord = uvCoords * noiseScale + vec2(timeOffset, 0.0);
     float normalizedNoise = generateSimplexNoise(coord);
     vec3 noiseViz = visualizeNoise(normalizedNoise);
+
     colour += noiseViz * 0.3;
+
     vec2 centre = vec2(0.5, 0.5);
     float centralTime = mod(u_time, 6.0);
     vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);

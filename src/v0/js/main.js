@@ -68,6 +68,7 @@ async function main() {
             projectionMatrix: gl.getUniformLocation(shaderProgram, "uProjectionMatrix"),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, "uModelViewMatrix"),
             normalMatrix: gl.getUniformLocation(shaderProgram, "uNormalMatrix"),
+            sphereToCartesian: gl.getUniformLocation(shaderProgram, "uSphereToCartesian"),
             resolution: gl.getUniformLocation(shaderProgram, "u_resolution"),
             time: gl.getUniformLocation(shaderProgram, "u_time"),
             uSampler: gl.getUniformLocation(shaderProgram, "uSampler"),

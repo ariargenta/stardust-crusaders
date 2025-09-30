@@ -83,6 +83,11 @@ function drawScene(
         cartesianRotation
     );
 
+    gl.uniform1f(
+        programInfo.uniformLocations.sphereToCartesian,
+        0.0
+    );
+
     gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,
