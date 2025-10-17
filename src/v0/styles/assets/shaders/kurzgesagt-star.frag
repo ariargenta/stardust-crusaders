@@ -29,6 +29,10 @@ float hash2D(vec2 coord) {
     return mod(coord.x + coord.y * 57.0, 12.0);
 }
 
+float hash3D(vec3 coord) {
+    return mod(coord.x + coord.y * 57.0 + coord.z * 113.0, 12.0);
+}
+
 vec2[12] getNoiseGradients() {
     return vec2[12](
         vec2(1,1)
@@ -43,6 +47,23 @@ vec2[12] getNoiseGradients() {
         , vec2(-1,1)
         , vec2(1,-1)
         , vec2(-1,-1)
+    );
+}
+
+vec3[12] getNoiseGradients3D() {
+    return vec3[12](
+        vec3(1,1,0)
+        , vec3(-1,1,0)
+        , vec3(1,-1,0)
+        , vec3(-1,-1,0)
+        , vec3(1,0,1)
+        , vec3(-1,0,1)
+        , vec3(1,0,-1)
+        , vec3(-1,0,-1)
+        , vec3(0,1,1)
+        , vec3(0,-1,1)
+        , vec3(0,1,-1)
+        , vec3(0,-1,-1)
     );
 }
 
@@ -79,6 +100,64 @@ float generateSimplexNoise(vec2 coord) {
     float falloff2 = max(0.0, 0.5 - dot(distance2, distance2));
     float contribution2 = falloff2 * falloff2 * falloff2 * falloff2 * dot(grad2, distance2);
     float totalNoise = 70.0 * (contribution0 + contribution1 + contribution2);
+
+    return (totalNoise + 1.0) * 0.5;
+}
+
+float generateSimplexNoise3D(vec3 coord) {
+    float skewFactor = 1.0 / 3.0;
+    float skewed = (coord.x + coord.y + coord.z) * skewFactor;
+    vec3 skewedCoord = coord + vec3(skewed);
+    vec3 cellOrigin = floor(skewedCoord);
+    vec3 cellFraction = fract(skewedCoord);
+    vec3 vertex1 = step(cellFraction.yzx, cellFraction.xyz);
+    vec3 vertex2 = 1.0 - step(cellFraction.zxy, cellFraction.xyz);
+    vec3 vertex3 = vec3(1.0);
+    float unskewFactor = 1.0 / 6.0;
+
+    vec3 vertex0 = vec3(0.0);
+    
+    float unskew0 = (cellOrigin.x + vertex0.x + cellOrigin.y + vertex0.y + cellOrigin.z + vertex0.z)
+        * unskewFactor;
+
+    vec3 euclidean0 = cellOrigin + vertex0 - vec3(unskew0);
+    vec3 distance0 = coord - euclidean0;
+
+    float unskew1 = (cellOrigin.x + vertex1.x + cellOrigin.y + vertex1.y + cellOrigin.z + vertex1.z)
+        * unskewFactor;
+
+    vec3 euclidean1 = cellOrigin + vertex1 - vec3(unskew1);
+    vec3 distance1 = coord - euclidean1;
+
+    float unskew2 = (cellOrigin.x + vertex2.x + cellOrigin.y + vertex2.y + cellOrigin.z + vertex2.z)
+        * unskewFactor;
+
+    vec3 euclidean2 = cellOrigin + vertex2 - vec3(unskew2);
+    vec3 distance2 = coord - euclidean2;
+
+    float unskew3 = (cellOrigin.x + vertex3.x + cellOrigin.y + vertex3.y + cellOrigin.z + vertex3.z)
+        * unskewFactor;
+
+    vec3 euclidean3 = cellOrigin + vertex3 - vec3(unskew3);
+    vec3 distance3 = coord - euclidean3;
+    vec3[12] gradients = getNoiseGradients3D();
+    int hash0 = int(hash3D(cellOrigin + vertex0));
+    int hash1 = int(hash3D(cellOrigin + vertex1));
+    int hash2 = int(hash3D(cellOrigin + vertex2));
+    int hash3 = int(hash3D(cellOrigin + vertex3));
+    vec3 grad0 = gradients[hash0];
+    vec3 grad1 = gradients[hash1];
+    vec3 grad2 = gradients[hash2];
+    vec3 grad3 = gradients[hash3];
+    float falloff0 = max(0.0, 0.6 - dot(distance0, distance0));
+    float contribution0 = falloff0 * falloff0 * falloff0 * falloff0 * dot(grad0, distance0);
+    float falloff1 = max(0.0, 0.6 - dot(distance1, distance1));
+    float contribution1 = falloff1 * falloff1 * falloff1 * falloff1 * dot(grad1, distance1);
+    float falloff2 = max(0.0, 0.6 - dot(distance2, distance2));
+    float contribution2 = falloff2 * falloff2 * falloff2 * falloff2 * dot(grad2, distance2);
+    float falloff3 = max(0.0, 0.6 - dot(distance3, distance3));
+    float contribution3 = falloff3 * falloff3 * falloff3 * falloff3 * dot(grad3, distance3);
+    float totalNoise = 32.0 * (contribution0 + contribution1 + contribution2 + contribution3);
 
     return (totalNoise + 1.0) * 0.5;
 }
@@ -209,8 +288,10 @@ vec3 composeKurzgesagtEffect(vec2 uvCoords) {
     vec3 colour = vec3(0.0, 0.0, 0.0);
     float noiseScale = 2.0;
     float timeOffset = u_time * 0.1;
-    vec2 coord = uvCoords * noiseScale + vec2(timeOffset, 0.0);
-    float normalizedNoise = generateSimplexNoise(coord);
+
+    // Use 3D noise with world position instead of 2D UV
+    vec3 coord3D = vWorldPosition * noiseScale + vec3(timeOffset, 0.0, 0.0);
+    float normalizedNoise = generateSimplexNoise3D(coord3D);
     vec3 noiseViz = visualizeNoise(normalizedNoise);
 
     colour += noiseViz * 0.3;
