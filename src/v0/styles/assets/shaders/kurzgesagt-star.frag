@@ -331,12 +331,14 @@ vec3 renderAllFlares3D(vec3 surfacePos, float noiseScale, float timeOffset) {
             flarePosition, noiseScale, timeOffset
         );
 
-        if (flareNoiseInfluence > 0.4) {
+        float fadeFactor = smoothstep(0.2, 0.6, flareNoiseInfluence);
+
+        if (fadeFactor > 0.01) {
             vec3 flareContribution = renderFlare3D(
                 surfacePos, flarePosition, localTime
             );
 
-            totalFlares += flareContribution * flareNoiseInfluence;
+            totalFlares += flareContribution * fadeFactor;
         }
     }
 
