@@ -327,18 +327,19 @@ vec3 renderAllFlares3D(vec3 surfacePos, float noiseScale, float timeOffset) {
             continue;
         }
 
-        float flareNoiseInfluence = calculateFlareInfluence3D(
-            flarePosition, noiseScale, timeOffset
+        float triggerTimeOffset = startTime * 0.15;
+        float triggerInfluence = calculateFlareInfluence3D(
+            flarePosition, noiseScale, triggerTimeOffset
         );
 
-        float fadeFactor = smoothstep(0.2, 0.6, flareNoiseInfluence);
+        float shouldTrigger = smoothstep(0.2, 0.6, triggerInfluence);
 
-        if (fadeFactor > 0.01) {
+        if (shouldTrigger > 0.01) {
             vec3 flareContribution = renderFlare3D(
                 surfacePos, flarePosition, localTime
             );
 
-            totalFlares += flareContribution * fadeFactor;
+            totalFlares += flareContribution * shouldTrigger;
         }
     }
 
@@ -348,7 +349,7 @@ vec3 renderAllFlares3D(vec3 surfacePos, float noiseScale, float timeOffset) {
 vec3 renderAllFlares(vec2 uvCoords, float noiseScale, float timeOffset) {
     vec3 totalFlares = vec3(0.0);
 
-    const int MAX_FLARES = 12;
+    const int MAX_FLARES = 2;
 
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
         vec2 flarePosition = getFlarePosition(flareIndex);
