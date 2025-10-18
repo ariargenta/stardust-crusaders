@@ -17,6 +17,7 @@ uniform sampler2D uSampler;
 
 in vec2 vTextureCoord;
 in vec3 vWorldPosition;
+in vec3 vObjectPosition;
 in vec3 vNormal;
 
 out vec4 fragColour;
@@ -180,6 +181,24 @@ vec3 visualizeNoise(float normalizedNoise) {
     }
 }
 
+vec3 sphericalToCartesian(float theta, float phi) {
+    float sinPhi = sin(phi);
+    return vec3(
+        sinPhi * cos(theta),
+        sinPhi * sin(theta),
+        cos(phi)
+    );
+}
+
+vec3 getFlarePosition3D(int flareID) {
+    int seedTheta = flareID * 73 + 17;
+    int seedPhi = flareID * 37 + 89;
+    float theta = fract(float(seedTheta) * 0.1031) * TAU;
+    float phi = fract(float(seedPhi) * 0.1543) * PI;
+
+    return sphericalToCartesian(theta, phi);
+}
+
 vec2 getFlarePosition(int flareID) {
     int seedX = flareID * 73 + 17;
     int seedY = flareID * 37 + 89;
@@ -221,6 +240,30 @@ vec3 getFlareColor(float ringPosition) {
     }
 }
 
+vec3 renderFlare3D(vec3 surfacePos, vec3 flareCenter, float localTime) {
+    FlareParams params = FlareParams(
+        0.075, 0.08, 0.075, 0.5, 0.8, 0.6, 0.8
+    );
+
+    float angularDist = acos(clamp(dot(surfacePos, flareCenter)
+        , -1.0, 1.0));
+
+    float radius1 = params.maxRadius1 * (1.0 - exp(-localTime * params.speed1 * 4.0));
+    float delayedTime = max(0.0, localTime - (params.trigger / params.speed1));
+    float radius2 = params.maxRadius2 * (1.0 - exp(-delayedTime * params.speed2 * 4.0));
+
+    if (angularDist <= radius1 && angularDist > radius2) {
+        float ringThickness = radius1 - radius2;
+        float ringPosition = (angularDist - radius2) / ringThickness;
+        vec3 flareColor = getFlareColor(ringPosition);
+        float fade = 1.0 - smoothstep(params.fadeStart, params.fadeEnd, radius1);
+
+        return flareColor * fade;
+    }
+
+    return vec3(0.0);
+}
+
 vec3 renderFlare(vec2 uvCoords, vec2 flareCenter, float localTime) {
     FlareParams params = FlareParams(
         0.075, 0.08, 0.075, 0.1, 0.25, 0.15, 0.25
@@ -252,6 +295,43 @@ float calculateFlareInfluence(vec2 flarePosition, float noiseScale, float timeOf
     float flareHash = hash2D(flareCell) / 12.0;
 
     return smoothstep(0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3);
+}
+
+float calculateFlareInfluence3D(vec3 flarePosition, float noiseScale, float timeOffset) {
+    vec3 flareCoord = flarePosition * noiseScale + vec3(timeOffset, 0.0, 0.0);
+    float flareHash = hash3D(floor(flareCoord * 2.0)) / 12.0;
+
+    return smoothstep(0.3, 0.8, flareHash + sin(u_time * 0.5) * 0.3);
+}
+
+vec3 renderAllFlares3D(vec3 surfacePos, float noiseScale, float timeOffset) {
+    vec3 totalFlares = vec3(0.0);
+
+    const int MAX_FLARES = 64;
+
+    for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
+        vec3 flarePosition = getFlarePosition3D(flareIndex);
+        float startTime = getFlareStartTime(flareIndex);
+        float localTime = mod(u_time - startTime, TAU);
+
+        if (localTime < 0.0 || localTime > 6.0) {
+            continue;
+        }
+
+        float flareNoiseInfluence = calculateFlareInfluence3D(
+            flarePosition, noiseScale, timeOffset
+        );
+
+        if (flareNoiseInfluence > 0.4) {
+            vec3 flareContribution = renderFlare3D(
+                surfacePos, flarePosition, localTime
+            );
+
+            totalFlares += flareContribution * flareNoiseInfluence;
+        }
+    }
+
+    return totalFlares;
 }
 
 vec3 renderAllFlares(vec2 uvCoords, float noiseScale, float timeOffset) {
@@ -288,22 +368,20 @@ vec3 composeKurzgesagtEffect(vec2 uvCoords) {
     vec3 colour = vec3(0.0, 0.0, 0.0);
     float noiseScale = 2.0;
     float timeOffset = u_time * 0.1;
-
-    // Use 3D noise with world position instead of 2D UV
     vec3 coord3D = vWorldPosition * noiseScale + vec3(timeOffset, 0.0, 0.0);
     float normalizedNoise = generateSimplexNoise3D(coord3D);
     vec3 noiseViz = visualizeNoise(normalizedNoise);
 
     colour += noiseViz * 0.3;
 
-    vec2 centre = vec2(0.5, 0.5);
+    vec3 centralFlarePos = vec3(0.0, 0.0, 1.0); // North pole
     float centralTime = mod(u_time, 6.0);
-    vec3 centralFlare = renderFlare(uvCoords, centre, centralTime);
+    vec3 centralFlare = renderFlare3D(vObjectPosition, centralFlarePos, centralTime);
 
     colour += centralFlare;
 
-    vec3 distributedFlares = renderAllFlares(
-        uvCoords, noiseScale, timeOffset
+    vec3 distributedFlares = renderAllFlares3D(
+        vObjectPosition, noiseScale, timeOffset
     );
 
     colour += distributedFlares;

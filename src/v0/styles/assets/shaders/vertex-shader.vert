@@ -13,6 +13,7 @@ uniform float uSphereToCartesian;
 
 out vec2 vTextureCoord;
 out vec3 vWorldPosition;
+out vec3 vObjectPosition;
 out vec3 vNormal;
 
 void main(void) {
@@ -22,5 +23,6 @@ void main(void) {
     vTextureCoord = aTextureCoord;
 
     vWorldPosition = (uModelViewMatrix * aVertexPosition).xyz;
+    vObjectPosition = normalize(aVertexPosition.xyz);
     vNormal = (uNormalMatrix * vec4(aVertexNormal, 0.0)).xyz;
 }
