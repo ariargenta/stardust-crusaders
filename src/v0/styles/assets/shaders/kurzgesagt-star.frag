@@ -378,8 +378,9 @@ vec3 composeKurzgesagtEffect(vec2 uvCoords) {
     float baseNoiseScale = 4.0;
     float animationSpeed = 0.15;
     float poleTestMode = 0.0;
-    float distFromNorthPole = abs(vObjectPosition.z - 1.0);
-    float distFromSouthPole = abs(vObjectPosition.z + 1.0);
+    vec3 surfacePosition = normalize(vObjectPosition);
+    float distFromNorthPole = abs(surfacePosition.z - 1.0);
+    float distFromSouthPole = abs(surfacePosition.z + 1.0);
     float nearPole = min(distFromNorthPole, distFromSouthPole);
 
     if (poleTestMode > 0.5 && nearPole < 0.3) {
@@ -395,13 +396,13 @@ vec3 composeKurzgesagtEffect(vec2 uvCoords) {
 
     vec3 noiseViz = visualizeNoise(normalizedNoise);
 
-    colour += noiseViz * 0.1;
+    colour += noiseViz * 0.0;
 
     vec3 centralFlarePos = vec3(0.0, 0.0, 1.0); // North pole
     float centralTime = mod(u_time, 6.0);
 
     vec3 centralFlare = renderFlare3D(
-        vObjectPosition, centralFlarePos, centralTime
+        surfacePosition, centralFlarePos, centralTime
     );
 
     colour += centralFlare;
@@ -409,7 +410,7 @@ vec3 composeKurzgesagtEffect(vec2 uvCoords) {
     float flareInfluenceScale = 1.5;
 
     vec3 distributedFlares = renderAllFlares3D(
-        vObjectPosition, flareInfluenceScale, timeOffset
+        surfacePosition, flareInfluenceScale, timeOffset
     );
 
     colour += distributedFlares;
