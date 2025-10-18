@@ -15,14 +15,18 @@ out vec2 vTextureCoord;
 out vec3 vWorldPosition;
 out vec3 vObjectPosition;
 out vec3 vNormal;
+out vec3 vTriplanarBlendWeights; // Pre-computed in vertex shader
 
 void main(void) {
     gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
 
-    // UV coordinate mapping disabled - pass through raw coords
     vTextureCoord = aTextureCoord;
-
     vWorldPosition = (uModelViewMatrix * aVertexPosition).xyz;
     vObjectPosition = normalize(aVertexPosition.xyz);
     vNormal = (uNormalMatrix * vec4(aVertexNormal, 0.0)).xyz;
+    vTriplanarBlendWeights = abs(vNormal);
+
+    vTriplanarBlendWeights = vTriplanarBlendWeights
+    / (vTriplanarBlendWeights.x + vTriplanarBlendWeights.y
+    + vTriplanarBlendWeights.z);
 }

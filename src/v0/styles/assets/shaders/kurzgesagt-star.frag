@@ -19,6 +19,7 @@ in vec2 vTextureCoord;
 in vec3 vWorldPosition;
 in vec3 vObjectPosition;
 in vec3 vNormal;
+in vec3 vTriplanarBlendWeights;
 
 out vec4 fragColour;
 
@@ -161,6 +162,14 @@ float generateSimplexNoise3D(vec3 coord) {
     float totalNoise = 32.0 * (contribution0 + contribution1 + contribution2 + contribution3);
 
     return (totalNoise + 1.0) * 0.5;
+}
+
+float generateTriplanarNoise(vec3 worldPos, vec3 blendWeights, float scale) {
+    float noiseX = generateSimplexNoise3D(worldPos.yzx * scale);
+    float noiseY = generateSimplexNoise3D(worldPos.xzy * scale);
+    float noiseZ = generateSimplexNoise3D(worldPos.xyz * scale);
+
+    return noiseX * blendWeights.x + noiseY * blendWeights.y + noiseZ * blendWeights.z;
 }
 
 vec3 visualizeNoise(float normalizedNoise) {
@@ -337,7 +346,7 @@ vec3 renderAllFlares3D(vec3 surfacePos, float noiseScale, float timeOffset) {
 vec3 renderAllFlares(vec2 uvCoords, float noiseScale, float timeOffset) {
     vec3 totalFlares = vec3(0.0);
 
-    const int MAX_FLARES = 64;
+    const int MAX_FLARES = 12;
 
     for (int flareIndex = 0; flareIndex < MAX_FLARES; ++flareIndex) {
         vec2 flarePosition = getFlarePosition(flareIndex);
@@ -366,22 +375,41 @@ vec3 renderAllFlares(vec2 uvCoords, float noiseScale, float timeOffset) {
 
 vec3 composeKurzgesagtEffect(vec2 uvCoords) {
     vec3 colour = vec3(0.0, 0.0, 0.0);
-    float noiseScale = 2.0;
-    float timeOffset = u_time * 0.1;
-    vec3 coord3D = vWorldPosition * noiseScale + vec3(timeOffset, 0.0, 0.0);
-    float normalizedNoise = generateSimplexNoise3D(coord3D);
+    float baseNoiseScale = 4.0;
+    float animationSpeed = 0.15;
+    float poleTestMode = 0.0;
+    float distFromNorthPole = abs(vObjectPosition.z - 1.0);
+    float distFromSouthPole = abs(vObjectPosition.z + 1.0);
+    float nearPole = min(distFromNorthPole, distFromSouthPole);
+
+    if (poleTestMode > 0.5 && nearPole < 0.3) {
+        colour += vec3(1.0, 0.0, 0.0) * (1.0 - nearPole / 0.3) * 0.5;
+    }
+
+    float timeOffset = u_time * animationSpeed;
+    vec3 animatedPos = vWorldPosition + vec3(timeOffset, 0.0, 0.0);
+
+    float normalizedNoise = generateTriplanarNoise(
+        animatedPos, vTriplanarBlendWeights, baseNoiseScale
+    );
+
     vec3 noiseViz = visualizeNoise(normalizedNoise);
 
-    colour += noiseViz * 0.3;
+    colour += noiseViz * 0.1;
 
     vec3 centralFlarePos = vec3(0.0, 0.0, 1.0); // North pole
     float centralTime = mod(u_time, 6.0);
-    vec3 centralFlare = renderFlare3D(vObjectPosition, centralFlarePos, centralTime);
+
+    vec3 centralFlare = renderFlare3D(
+        vObjectPosition, centralFlarePos, centralTime
+    );
 
     colour += centralFlare;
 
+    float flareInfluenceScale = 1.5;
+
     vec3 distributedFlares = renderAllFlares3D(
-        vObjectPosition, noiseScale, timeOffset
+        vObjectPosition, flareInfluenceScale, timeOffset
     );
 
     colour += distributedFlares;
