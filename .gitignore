@@ -36,7 +36,7 @@ conanfile.lock
 .vs/
 .vscode/
 !/.vscode/tasks.json
-.idea
+.idea/
 /*.user
 *.useroscache
 *.swp
@@ -72,6 +72,9 @@ Release/
 venv/
 env/
 
-# AI config files
+# AI
 CLAUDE.md
 GPT.md
+.agents/
+.codex/
+.claude/

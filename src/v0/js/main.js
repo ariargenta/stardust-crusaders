@@ -135,8 +135,8 @@ async function main() {
  * @returns {WebGLProgram|null} - Linked shader program object, null if linking failed
  */
 function initShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
-    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+    const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
     const shaderProgram = gl.createProgram();
 
     gl.attachShader(shaderProgram, vertexShader);
@@ -156,7 +156,14 @@ function initShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
     return shaderProgram;
 }
 
-function loadShader(gl, type, source) {
+/**
+ * @brief - Shader compilation process
+ * @param {WebGLRenderingContext} gl - WebGL rendering context
+ * @param {number} type - Shader ID
+ * @param {string} source - Shader source code URL
+ * @returns {WebGLShader|null} - Compiled shader artifact, null if compilation process failed
+ */
+function compileShader(gl, type, source) {
     const shader = gl.createShader(type);
 
     gl.shaderSource(shader, source);
